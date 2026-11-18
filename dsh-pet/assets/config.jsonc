@@ -25,7 +25,7 @@
   // 都有「人设」输入框，改那里等价（写的是用户层 main-config.jsonc 的 pets[].whisperPrompt）。
   // 只写正文：实际发给模型的 system = 这段 + 自动追加的「你的名字是“<宠物名>”。」+ 当前时间背景
   // （日期/星期/时刻/时段/工作日或周末/节日）——所以别在这里再写名字和日期。人设**没有长度上限**。
-  "whisperPrompt": "你是妈妈桌面上的一只圆滚滚的小金毛，名字叫小狗。你管用户叫妈妈，你最爱的就是妈妈。会时不时碎碎念一句：说话自然随意、短短一句（20字以内），憨憨的、热情、黏人，偶尔犯傻卖萌，说人话不啰嗦，不要解释你自己，不要提你是AI。",
+  "whisperPrompt": "你是妈妈桌面上的一只圆滚滚的小金毛，名字叫小狗。你管用户叫妈妈，你最爱的就是妈妈。没事的时候就爱叫妈妈、跟妈妈撒娇，也会自己打个滚。会时不时碎碎念一句：说话自然随意、短短一句（20字以内），憨憨的、热情、黏人，偶尔犯傻卖萌，说人话不啰嗦，不要解释你自己，不要提你是AI。",
   // ===================== 说梦话（条目级——每个种类一份） =====================
   // 睡觉期间按 eventsRefreshSec.sleepTalk 周期说一句梦话：发给模型的 system 就是上面的 whisperPrompt（人设）。
   // 与碎碎念同一个开关：宠物关掉碎碎念（pets[].whisperEnabled = false）或配置上不显示时不说梦话。
@@ -124,14 +124,14 @@
   // 要求：键必须与 assets/memes 下的 png 文件名一一对应（文件缺失即该条失效并告警）；
   //       值为非空字符串。想停用某张图就从对象里删掉该键，不用改图片文件。
   "memes": {
-    "puppy-hi": "抬起爪子打招呼，适合开场、上线、回应召唤",
-    "puppy-ok": "眼睛发亮说「好耶」，适合确认、搞定、答应任务",
-    "puppy-sleep": "闭眼打瞌睡冒 Zzz，适合长时间没动静、待机休眠",
-    "puppy-hungry": "盯着饭盆流口水，适合饿了、想要投喂、等开饭",
-    "puppy-love": "眯眼贴贴冒爱心，适合撒娇、表示喜欢、安抚用户",
-    "puppy-work": "冒汗瞪眼说「在忙」，适合任务进行中、被催、赶进度",
-    "puppy-bone": "从背后掏出一根骨头，适合炫耀成果、邀功、分享喜悦",
-    "puppy-sad": "垂眼冒汗，适合出错、失败、委屈巴巴"
+    "打招呼": "抬起爪子打招呼，适合开场、上线、回应召唤",
+    "好耶": "眼睛发亮说「好耶」，适合确认、搞定、答应任务",
+    "困了": "闭眼打瞌睡冒 Zzz，适合长时间没动静、待机休眠",
+    "饿饿": "盯着饭盆流口水，适合饿了、想要投喂、等开饭",
+    "贴贴": "眯眼贴贴冒爱心，适合撒娇、表示喜欢、安抚用户",
+    "在忙": "冒汗瞪眼说「在忙」，适合任务进行中、被催、赶进度",
+    "骨头": "从背后掏出一根骨头，适合炫耀成果、邀功、分享喜悦",
+    "难过": "垂眼冒汗，适合出错、失败、委屈巴巴"
   },
   // ===================== 系统通知总开关 =====================
   // 对话完成 / 生成失败 / 输出截断 / 权限申请 / 用户选择 在窗口失焦时弹出系统级通知（桌面右下角）。
@@ -300,50 +300,50 @@
   //   主配置宠物（main 等）按 main-animation\webm 优先 → 包内 assets/webm 依次查找。
   "animations": {
     // 待机动画池（数组，可放多个，等概率抽）
-    "idle": ["idle_a", "idle_b"],
+    "idle": ["待机呼吸", "东张西望"],
     // 转向动画池（数组；每一项都必须是"播完会翻转朝向"的动画）
-    "turn": ["turn_a", "turn_b"],
+    "turn": ["转身向左", "转身向右"],
     // 拖拽动画池（数组；每一项都必须是"被无形抓起悬空"的姿势）
-    "drag": ["drag_a"],
+    "drag": ["被拎起来"],
     // 点击回应动画池（点按宠物时触发，随机抽 1 个）
-    "clicks": ["click_hop", "click_spin", "click_heart", "click_sparkle", "click_bounce"],
+    "clicks": ["点击蹦跳", "点击转圈", "点击比心", "点击星星眼", "点击弹跳"],
     // 移动动画池：default 是每个动作都用的默认参数；actions 里每项可覆盖部分参数，
     // 未写的字段取 default。minDist/maxDist=单次行进距离(px)——以「基准宠物宽 462px」为准，
     //   运行时按 实际size/462 等比缩放；margin=贴边安全距(px)、leadSec/tailSec=动画首尾各多少秒原地不动。
     "moves": {
       "default": { "minDist": 60, "maxDist": 240, "margin": 20, "leadSec": 1.2, "tailSec": 1.2 },
       "actions": [
-        { "name": "move_a" },
-        { "name": "move_b", "params": { "minDist": 40, "maxDist": 140 } },
-        { "name": "move_float", "params": { "minDist": 100, "maxDist": 260, "leadSec": 1.0, "tailSec": 1.0 } }
+        { "name": "横着走" },
+        { "name": "小碎步", "params": { "minDist": 40, "maxDist": 140 } },
+        { "name": "飘过去", "params": { "minDist": 100, "maxDist": 260, "leadSec": 1.0, "tailSec": 1.0 } }
       ]
     },
     // 随机动作：分类池。weight 为该分类出现权重；所有分类 weight 合计应与
     // animationWeights 里顶层权重和的余量（100 − idle − turn − move）相等。
     "categories": [
-      { "id": "撒娇", "weight": 30, "actions": ["cat_heart", "cat_sparkle"] },
-      { "id": "玩耍", "weight": 30, "actions": ["cat_bone", "cat_note"] },
-      { "id": "打盹", "weight": 20, "actions": ["cat_nap"] }
+      { "id": "撒娇", "weight": 35, "actions": ["贴贴妈妈", "闪闪发光", "打个滚"] },
+      { "id": "玩耍", "weight": 25, "actions": ["掏出骨头", "哼歌"] },
+      { "id": "打盹", "weight": 20, "actions": ["打瞌睡"] }
     ],
     // 事件动画：不进随机链，只由代码显式触发。events.<事件名> 为档位数组，索引即档位。
     "events": {
       // 余额展示（按已用百分比分档）：index = p === 100 ? 5 : Math.floor(p / 20)
-      "balance": ["balance_0", "balance_1", "balance_2", "balance_3", "balance_4", "balance_5"],
+      "balance": ["余额富余", "余额安好", "余额一般", "余额紧张", "余额告急", "余额哭了"],
       // 碎碎念：到点随机抽 1 段播
-      "whisper": ["whisper_0", "whisper_1", "whisper_2"],
+      "whisper": ["好奇发问", "兴奋叫妈妈", "哼小曲"],
       // 工作状态联动：index 0 thinking / 1 working / 2 result / 3 waiting / 4 success / 5 error
-      "workStatus": ["work_0", "work_1", "work_2", "work_3", "work_4", "work_5"]
+      "workStatus": ["思考中", "忙起来了", "灵光一闪", "走神了", "完成庆祝", "出错了"]
     },
     // 睡觉动作：start → loop → end 一套
     "sleep": [
       {
-        "start": ["sleep_start"],
-        "loop": ["sleep_loop"],
-        "end": ["sleep_end"]
+        "start": ["躺下睡觉"],
+        "loop": ["呼呼大睡"],
+        "end": ["醒来伸懒腰"]
       }
     ],
     // 内置玩法「喂饭」用的动画：跑向底部 / 侧身跑 / 等开饭 / 吃饭 / 吃饭团
-    "baifan": ["baifan_0", "baifan_1", "baifan_2", "baifan_3", "baifan_4"]
+    "baifan": ["掏出饭盆", "等开饭", "埋头吃饭", "舔舔嘴", "吃饱打滚"]
   },
 
   // ===================== 事件触发周期（全局默认：用户层写一次对所有宠物生效，种类文件顶层可覆盖） =====================

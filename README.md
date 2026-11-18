@@ -2,11 +2,11 @@
 
 <p align="center">
   <img alt="platform" src="https://img.shields.io/badge/platform-DeepSeek%20Harness%20Web-8A2BE2">
-  <img alt="assets" src="https://img.shields.io/badge/assets-41%20animations-ff69b4">
+  <img alt="assets" src="https://img.shields.io/badge/assets-42%20animations-ff69b4">
   <a href="LICENSE"><img alt="license" src="https://img.shields.io/badge/license-MIT-orange"></a>
 </p>
 
-一只住在 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) 里的桌面宠物：**圆滚滚的小金毛「小狗」（插件名 `puppy`）**。它管你叫妈妈，最爱的就是妈妈。待机呼吸、歪头张望、随机小动作（撒娇、掏骨头、哼歌、打盹）、左右转向、屏幕漫游、点击 Q 弹、拖拽甩抛反弹，41 段透明动画带着表情和道具变化随时无缝衔接；还会跟随 DSH 会话事件切换工作状态动画、按档位播放余额动画、碎碎念与对话聊天、窗口失焦时弹系统通知。可多开同屏，能脱离浏览器住上**桌面**（透明置顶小窗），也能自己添加**全新宠物种类**（pet pack）。
+一只住在 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) 里的桌面宠物：**圆滚滚的小金毛「小狗」（插件名 `puppy`）**。它管你叫妈妈，最爱的就是妈妈。待机呼吸、歪头张望、随机小动作（撒娇、掏骨头、哼歌、打盹）、左右转向、屏幕漫游、点击 Q 弹、拖拽甩抛反弹，42 段透明动画带着表情和道具变化随时无缝衔接（含「打个滚」）；还会跟随 DSH 会话事件切换工作状态动画、按档位播放余额动画、碎碎念与对话聊天、窗口失焦时弹系统通知。可多开同屏，能脱离浏览器住上**桌面**（透明置顶小窗），也能自己添加**全新宠物种类**（pet pack）。
 
 > 本仓库是 [PC2005-cloud/dsh-pet](https://github.com/PC2005-cloud/dsh-pet) 的 fork，分支 `puppy`：把主角整体换成一只**原创的小金毛「小狗」**，动画、表情包、头像、默认配置与文档全部替换，**不含上游角色素材**。代码来自上游，遵循 MIT。
 
@@ -77,29 +77,29 @@
 **待机 / 转向**
 
 <p>
-  <img src="dsh-pet/assets/preview/idle_a.gif" width="160" alt="待机呼吸" title="待机呼吸">
-  <img src="dsh-pet/assets/preview/turn_a.gif" width="160" alt="原地转向" title="原地转向">
+  <img src="dsh-pet/assets/preview/待机呼吸.gif" width="160" alt="待机呼吸" title="待机呼吸">
+  <img src="dsh-pet/assets/preview/转身向左.gif" width="160" alt="原地转向" title="原地转向">
 </p>
 
 **点击回应**
 
 <p>
-  <img src="dsh-pet/assets/preview/click_hop.gif" width="160" alt="点击跳跃" title="点击跳跃">
-  <img src="dsh-pet/assets/preview/click_heart.gif" width="160" alt="点击贴贴" title="点击贴贴">
+  <img src="dsh-pet/assets/preview/点击蹦跳.gif" width="160" alt="点击跳跃" title="点击跳跃">
+  <img src="dsh-pet/assets/preview/点击比心.gif" width="160" alt="点击贴贴" title="点击贴贴">
 </p>
 
 **小动作 / 玩耍**
 
 <p>
-  <img src="dsh-pet/assets/preview/cat_bone.gif" width="160" alt="从身侧掏出骨头" title="从身侧掏出骨头">
-  <img src="dsh-pet/assets/preview/baifan_2.gif" width="160" alt="埋头吃饭" title="埋头吃饭">
+  <img src="dsh-pet/assets/preview/掏出骨头.gif" width="160" alt="从身侧掏出骨头" title="从身侧掏出骨头">
+  <img src="dsh-pet/assets/preview/埋头吃饭.gif" width="160" alt="埋头吃饭" title="埋头吃饭">
 </p>
 
 **工作 / 睡觉**
 
 <p>
-  <img src="dsh-pet/assets/preview/work_4.gif" width="160" alt="任务成功欢呼" title="任务成功欢呼">
-  <img src="dsh-pet/assets/preview/sleep_loop.gif" width="160" alt="睡着循环" title="睡着循环">
+  <img src="dsh-pet/assets/preview/完成庆祝.gif" width="160" alt="任务成功欢呼" title="任务成功欢呼">
+  <img src="dsh-pet/assets/preview/呼呼大睡.gif" width="160" alt="睡着循环" title="睡着循环">
 </p>
 
 > 注：动画为透明背景；GIF 预览中透明部分显示为页面底色，实际 webm 播放为透明。
