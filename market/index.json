@@ -1,0 +1,73 @@
+{
+  "format": 1,
+  "title": {
+    "en": "Agelei19 DSH Plugins",
+    "zh": "Agelei19 的 DSH 插件"
+  },
+  "description": {
+    "en": "Plugins published by Agelei19 for DeepSeek Harness.",
+    "zh": "Agelei19 发布的 DeepSeek Harness 插件。"
+  },
+  "metadata": {
+    "categories": {
+      "pets": {
+        "title": {
+          "en": "Pets",
+          "zh": "桌面宠物"
+        }
+      }
+    },
+    "labels": {
+      "zh": {
+        "title": {
+          "en": "Chinese",
+          "zh": "中文"
+        }
+      }
+    }
+  },
+  "plugins": [
+    {
+      "name": "puppy",
+      "title": {
+        "en": "Puppy — desktop pet",
+        "zh": "小狗 · 桌面宠物"
+      },
+      "description": {
+        "en": "A round little golden puppy that lives on your desktop: breathes, wags, rolls over, sleeps on its side and pulls bones out from behind its back. 47 hand-directed animations.",
+        "zh": "一只圆滚滚的小金毛住进你的桌面：会呼吸、会摇尾巴、会打个滚、会侧趴睡觉，还会从背后掏出骨头。47 段动画，会自己跟妈妈撒娇。"
+      },
+      "icon": "icon.png",
+      "author": "Agelei19",
+      "homepage": "https://github.com/Agelei19/dsh-pet",
+      "repository": {
+        "url": "https://github.com/Agelei19/dsh-pet",
+        "directory": "dsh-pet"
+      },
+      "metadata": {
+        "category": "pets",
+        "keywords": [
+          "desktop pet",
+          "puppy",
+          "桌宠",
+          "小狗"
+        ],
+        "labels": [
+          "zh"
+        ]
+      },
+      "versions": [
+        {
+          "version": "0.6.0",
+          "publishTimestamp": 1795026486,
+          "source": {
+            "type": "git",
+            "url": "https://github.com/Agelei19/dsh-pet",
+            "commit": "b9857b80da2d7e69c0d8fa4d9ab88434cd7dab3d",
+            "path": "dsh-pet"
+          }
+        }
+      ]
+    }
+  ]
+}
