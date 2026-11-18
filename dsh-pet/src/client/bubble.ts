@@ -41,7 +41,7 @@ const bubbleCss = [
   `@font-face{font-family:"ShangshouSoftCandy";src:url("${ROUTE_PATH}/font/上首软糖体.ttf") format("truetype");font-display:swap;font-weight:400}`,
   '.dsh-pet-bubble{position:absolute;left:50%;transform:translateX(-50%);' +
     'bottom:calc(100% - var(--dsh-pet-size)*0.108);' +
-    'width:max-content;min-width:calc(var(--f)*5.7143);max-width:min(calc(var(--f)*16),100%);' +
+    'width:max-content;min-width:calc(var(--f)*5.7143);max-width:min(calc(var(--f)*16),480px);' +
     // 钉死 content-box：宿主可能全局设了 border-box，让 min/max-width 把内边距算进去，
     // 表现为「明明还有空位却折行」；桌面端同样钉死，两端一致。
     'box-sizing:content-box;' +
@@ -61,7 +61,7 @@ const bubbleCss = [
   '.dsh-pet-bubble.is-on{opacity:1}',
   // 碎碎念变体：字号缩到余额气泡的 0.75，宽度下限更窄，上限与折行规则相同。
   '.dsh-pet-bubble.dsh-pet-whisper{font-size:calc(var(--f)*0.7473);' +
-    'min-width:calc(var(--f)*2.1978);max-width:min(calc(var(--f)*10.989),100%)}',
+    'min-width:calc(var(--f)*2.1978);max-width:min(calc(var(--f)*10.989),420px)}',
   // 配图样式在 shared 的 MEME_BUBBLE_CSS，这里只保留标题与行样式。
   '.dsh-pet-bubble .pet-bub-title{font-size:calc(var(--f)*0.7692);color:rgba(43,43,43,.6);margin-bottom:calc(var(--f)*0.1978)}',
   '.dsh-pet-bubble .pet-bub-row{display:flex;justify-content:space-between;gap:calc(var(--f)*0.6593);flex-wrap:wrap}',

@@ -47,7 +47,7 @@ export const TOOLTIP_CSS = [
   '.pet-tooltip{',
   // fixed + 坐标由 JS 按光标写：left/top 只是未定位前的兜底，不会真的显示
   'position:fixed;left:0;top:0;',
-  'max-width:calc(var(--dsh-pet-size,var(--pet-size,462px))*0.8);',
+  'max-width:min(calc(var(--dsh-pet-size,var(--pet-size,462px))*0.8 + 240px),480px);',
   'padding:calc(var(--dsh-pet-size,var(--pet-size,462px))*0.010) calc(var(--dsh-pet-size,var(--pet-size,462px))*0.021);',
   'border-radius:calc(var(--dsh-pet-size,var(--pet-size,462px))*0.016);',
   // 白底黑字：对齐原生提示的观感，深色胶囊落在浅色宠物身上太抢眼
