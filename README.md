@@ -2,13 +2,26 @@
 
 <p align="center">
   <img alt="platform" src="https://img.shields.io/badge/platform-DeepSeek%20Harness%20Web-8A2BE2">
-  <img alt="assets" src="https://img.shields.io/badge/assets-42%20animations-ff69b4">
+  <img alt="assets" src="https://img.shields.io/badge/assets-47%20animations-ff69b4">
   <a href="LICENSE"><img alt="license" src="https://img.shields.io/badge/license-MIT-orange"></a>
 </p>
 
-一只住在 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) 里的桌面宠物：**圆滚滚的小金毛「小狗」（插件名 `puppy`）**。它管你叫妈妈，最爱的就是妈妈。待机呼吸、歪头张望、随机小动作（撒娇、掏骨头、哼歌、打盹）、左右转向、屏幕漫游、点击 Q 弹、拖拽甩抛反弹，42 段透明动画带着表情和道具变化随时无缝衔接（含「打个滚」）；还会跟随 DSH 会话事件切换工作状态动画、按档位播放余额动画、碎碎念与对话聊天、窗口失焦时弹系统通知。可多开同屏，能脱离浏览器住上**桌面**（透明置顶小窗），也能自己添加**全新宠物种类**（pet pack）。
+一只住在 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) 里的桌面宠物：**圆滚滚的小金毛「小狗」（插件名 `puppy`）**。它管你叫妈妈，最爱的就是妈妈。待机呼吸、歪头张望、随机小动作（撒娇、掏骨头、哼歌、打盹）、左右转向、屏幕漫游、点击 Q 弹、拖拽甩抛反弹，47 段透明动画带着表情和道具变化随时无缝衔接（打滚、亲亲、侧趴睡、仰面睡、团成球）；还会跟随 DSH 会话事件切换工作状态动画、按档位播放余额动画、碎碎念与对话聊天、窗口失焦时弹系统通知。可多开同屏，能脱离浏览器住上**桌面**（透明置顶小窗），也能自己添加**全新宠物种类**（pet pack）。
 
 > 本仓库是 [PC2005-cloud/dsh-pet](https://github.com/PC2005-cloud/dsh-pet) 的 fork，分支 `puppy`：把主角整体换成一只**原创的小金毛「小狗」**，动画、表情包、头像、默认配置与文档全部替换，**不含上游角色素材**。代码来自上游，遵循 MIT。
+
+## 从插件市场安装
+
+本仓库自带一份 DSH 插件市场索引（格式 1）：[`market/index.json`](market/index.json)。
+
+在 DSH 里打开「插件 → 插件市场 → 索引源 → 添加」，填入：
+
+```
+https://raw.githubusercontent.com/Agelei19/dsh-pet/puppy/market/index.json
+```
+
+索引里的安装源固定到某个 commit（`git+https://…#<commit>&path:/dsh-pet`），所以别人装到的是这个仓库当时的快照。
+索引格式与自建索引的写法见 [market/README.md](market/README.md)。
 
 ## 快速开始（安装插件）
 
@@ -27,7 +40,7 @@
 
 只做桌宠本身，不碰 DSH 内核；能力就下面这些。
 
-- **100+ 段动画资产**：待机、走动漫游、玩耍、工作、对话等全部表现都由视频动画驱动，按权重首尾相接，也可换成自己的素材。
+- **47 段动画资产**：待机、走动漫游、玩耍、工作、对话等全部表现都由视频动画驱动，按权重首尾相接，也可换成自己的素材。
 - **多开与种类**：同时养多只，各自大小与位置；也能自定义宠物种类（pet pack），一类一套动画与素材。
 - **三种运行形态**：DSH web 的浏览器 overlay、DSH 桌面应用的透明置顶窗、完全不依赖 DSH 的独立模式。
 - **交互与物理**：点击回应、拖拽甩抛、双击弹弓、宠物互撞，同一套物理与 Q 弹挤压手感，参数可调。
@@ -163,3 +176,7 @@ AI 提示词 → 绿幕视频 → 透明动画 → 插件，换角色、换动�
 - 本仓库不含任何第三方角色形象；「小狗」为本仓库原创角色，与任何已有 IP 无关，也不声称模仿某种画风。
 - 若你二次发布，请保留本节的「代码来自上游 PC2005-cloud/dsh-pet（MIT）」署名。
 - 生成模型权重不随本仓库分发，仅本机用于产出素材。
+- 依赖许可：`openai` 与 `@anthropic-ai/sdk`（MIT / Apache-2.0）、`zod`（MIT）、Electron 官方工具链（MIT）都是宽松许可。
+  **唯一的例外是可选语音朗读用到的 `@andresaya/edge-tts`（GPL-3.0-only）**：本仓库产物 `lib/index.js` 里只有一句动态
+  `import()`，该依赖的代码**不会**被内联进本仓库产物，它作为独立 npm 包在安装时获取（聚合关系）。
+  如果你要把整包「打成一个文件」再发行，GPL-3.0 的传染性就会落到那个产物上——那时要么去掉语音功能，要么按 GPL-3.0 发行。
