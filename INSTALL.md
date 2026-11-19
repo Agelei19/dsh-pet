@@ -18,7 +18,7 @@ AI 照做的三步：
 
 ```bash
 git clone --depth 1 -b puppy https://github.com/Agelei19/dsh-pet-puppy
-node dsh-pet-puppy/dsh-pet/scripts/install-puppy.mjs --profile desktop
+node dsh-pet-puppy/scripts/install-puppy.mjs --profile desktop
 # 重启 DSH
 ```
 
@@ -75,7 +75,7 @@ dsh plugin --profile desktop add dsh-pet
 ```sh
 git clone https://github.com/Agelei19/dsh-pet-puppy.git
 cd dsh-pet
-node scripts/install-puppy.mjs --profile desktop   # dsh web 用 --profile web
+node dsh-pet-puppy/scripts/install-puppy.mjs --profile desktop   # dsh web 用 --profile web
 ```
 
 脚本做了三件事：备份并改写 profile 的 `package.json`（`dependencies.puppy = file:<仓库里的 dsh-pet>`、`dsh.profile.bundles` 补 `puppy`）、在 `node_modules` 建 junction 指向仓库，因此**改了 `src/` 重新 `npm run build` 就即时生效**，不用重装。

@@ -35,7 +35,7 @@ https://raw.githubusercontent.com/Agelei19/dsh-pet-puppy/puppy/market/index.json
 
 ```bash
 git clone --depth 1 -b puppy https://github.com/Agelei19/dsh-pet-puppy
-node dsh-pet-puppy/dsh-pet/scripts/install-puppy.mjs --profile desktop
+node dsh-pet-puppy/scripts/install-puppy.mjs --profile desktop
 # 然后重启一次 DSH
 ```
 
