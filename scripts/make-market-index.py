@@ -27,9 +27,9 @@ def build(commit, version, ts=None):
                 'title': {'en': 'Puppy — desktop pet', 'zh': '小狗 · 桌面宠物'},
                 'description': {
                     'en': 'A round little golden puppy that lives on your desktop: breathes, wags, rolls over, '
-                          'sleeps on its side and pulls bones out from behind its back. 47 hand-directed animations.',
+                          'sleeps on its side and pulls bones out from behind its back. 51 hand-directed animations: idle, walking, playing, work, peeking from screen edges and more.',
                     'zh': '一只圆滚滚的小金毛住进你的桌面：会呼吸、会摇尾巴、会打个滚、会侧趴睡觉，'
-                          '还会从背后掏出骨头。47 段动画，干活时在头顶报进度。',
+                          '还会从背后掏出骨头。51 段动画，干活时在头顶报进度。',
                 },
                 'icon': 'icon.png',
                 'author': 'Agelei19',
