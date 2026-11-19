@@ -24,8 +24,9 @@ const PEEK_ANIM: Record<DockEdge, string> = {
 
 /** 松手时离边缘多近就贴上（px）。 */
 const TRIGGER_PX = 96;
-/** 贴边后留在屏幕内的宽度（px）。 */
-const VISIBLE_PX = 58;
+/** 贴边后留在屏幕内的宽度（px）。按盒高（size×9/16≈107px）的八成留，
+ *  这样露出来的脑袋大小跟平时差不多，不会缩水成一半。 */
+const VISIBLE_PX = 82;
 
 /** 注入的 react 能力。 */
 export interface DockRuntime {
