@@ -14395,6 +14395,8 @@ function createCardRuntime(rt) {
 			setCustomPos: actions.setCustomPos,
 			setOnce: actions.setOnce
 		});
+		const undockAt = useRef(null);
+		const downAt = useRef(null);
 		menuActionsRef.current ?? (menuActionsRef.current = createMenuActions({
 			animations: () => cfgRef.current.animations,
 			applyMerged: (merged) => petBridge.reload(merged),
@@ -14498,10 +14500,11 @@ function createCardRuntime(rt) {
 			},
 			onContextMenu: entry.handleContextMenu,
 			onPointerDown: (e) => {
-				if (dock.docked()) {
-					dock.wake();
-					return;
-				}
+				downAt.current = {
+					x: e.clientX,
+					y: e.clientY
+				};
+				if (dock.docked()) undockAt.current = dock.release();
 				drag.onPointerDown(e);
 			},
 			onPointerEnter: (e) => {
@@ -14519,6 +14522,11 @@ function createCardRuntime(rt) {
 			onPointerUp: (e) => {
 				drag.onPointerUp(e);
 				dock.settle();
+				const back = undockAt.current;
+				const down = downAt.current;
+				if (back !== null && down !== null && Math.hypot(e.clientX - down.x, e.clientY - down.y) <= 4) dock.restore(back);
+				undockAt.current = null;
+				downAt.current = null;
 			},
 			rootRef,
 			rootStyle,

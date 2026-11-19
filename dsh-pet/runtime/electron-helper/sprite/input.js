@@ -9,13 +9,12 @@
 
 Object.assign(PetSprite.prototype, {
   onPointerDown(e) {
-    // 扒在屏幕边上时按下：先下来（回到贴边前的位置），这一下不进入拖拽。
+    // 扒在屏幕边上时按下：解绑但停在原地，紧接着就进入拖拽——贴上去之后必须能直接拖出来。
+    // 只是点一下（没拖动）的情况在 onPointerUp 里送回原位。
     if (this.dockedTo) {
-      const back = this.dockedTo.back;
+      this.dockBackPos = this.dockedTo.back;
       this.dockedTo = null;
-      this.sendBounds(back.x, back.y);
       this.playIdle();
-      return;
     }
     // 只认左键：右键进入拖拽判定会与右键菜单打架
     if (e.button !== 0) return;
@@ -188,6 +187,11 @@ Object.assign(PetSprite.prototype, {
   onPointerUp(e) {
     const d = this.dragState;
     const wasDragging = d.dragging;
+    // 从边上按下后只是点了一下：送回贴边前的位置。
+    if (!wasDragging && this.dockBackPos) {
+      this.sendBounds(this.dockBackPos.x, this.dockBackPos.y);
+      this.dockBackPos = null;
+    }
     d.active = false;
     d.dragging = false;
     this.hit.classList.remove('dragging');

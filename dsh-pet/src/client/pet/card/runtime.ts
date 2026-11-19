@@ -16,6 +16,7 @@ import { petBridge } from '../../settings.ts';
 import { playClickSound } from '../click-sound.ts';
 import { createMenuActions, type MenuActions } from '../menu-actions.ts';
 import { derivePetMetrics, petRootStyle, petStageStyle } from '../motion/geometry.ts';
+import type { Center } from '../motion/geometry.ts';
 import { makePlaybackReporter } from '../playback-report.ts';
 import { createAnimationFlow } from './animation-flow.ts';
 import { createBubbleSlots } from './bubble-slots.ts';
@@ -208,6 +209,9 @@ export function createCardRuntime(rt: PetRuntime) {
       setOnce: actions.setOnce,
     });
 
+    const undockAt = useRef<Center | null>(null);
+    const downAt = useRef<{ x: number; y: number } | null>(null);
+
     // 菜单动作派发：依赖运动、拖拽、提示与对话四处入口，所以放在它们之后。
     menuActionsRef.current ??= createMenuActions({
       animations: () => cfgRef.current.animations,
@@ -333,11 +337,9 @@ export function createCardRuntime(rt: PetRuntime) {
       },
       onContextMenu: entry.handleContextMenu,
       onPointerDown: (e) => {
-        // 扒在边上时按下去先下来，这一下不进入拖拽（否则会从半只露在屏外的地方拖起）。
-        if (dock.docked()) {
-          dock.wake();
-          return;
-        }
+        downAt.current = { x: e.clientX, y: e.clientY };
+        // 扒在边上时按下去：解绑但停在原地，紧接着就进入拖拽——贴上去之后必须能直接拖出来。
+        if (dock.docked()) undockAt.current = dock.release();
         drag.onPointerDown(e);
       },
       onPointerEnter: (e) => {
@@ -356,6 +358,14 @@ export function createCardRuntime(rt: PetRuntime) {
       onPointerUp: (e) => {
         drag.onPointerUp(e);
         dock.settle();
+        // 只是「点一下」没拖动：把宠物送回贴边前的位置，否则它会一直半挂在屏幕上。
+        const back = undockAt.current;
+        const down = downAt.current;
+        if (back !== null && down !== null && Math.hypot(e.clientX - down.x, e.clientY - down.y) <= 4) {
+          dock.restore(back);
+        }
+        undockAt.current = null;
+        downAt.current = null;
       },
       rootRef,
       rootStyle,

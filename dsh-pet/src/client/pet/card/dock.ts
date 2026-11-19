@@ -207,6 +207,20 @@ export function createCardDock(rt: DockRuntime) {
         return dist <= EDGE_BAND_PX ? edge : null;
       },
       force: (edge: DockEdge) => dock(edge),
+      /**
+       * 解绑但停在原地（不回到原位）：用户在边上按住要把它拖出来时必须原地起拖，
+       * 否则「先跳回原位再跟手」会非常突兀。
+       *
+       * @returns 贴边前的位置（只是点一下没拖走时用它回去）。
+       */
+      release: (): Center | null => {
+        const state = dockedRef.current;
+        clearTimers();
+        dockedRef.current = null;
+        return state === null ? null : state.back;
+      },
+      /** 回到给定位置（点一下边上的宠物时用）。 */
+      restore: (back: Center) => apiRef.current.setCustomPos(back),
       settle: () => {
         if (dockedRef.current !== null) return;
         const { distance, edge } = nearestEdge();
