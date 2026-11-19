@@ -25,9 +25,13 @@ const EDGE_ANIM: Record<DockEdge, string> = {
 
 /** 松手时离边缘多近就贴上（px）。 */
 const TRIGGER_PX = 96;
-/** 贴边后留在屏幕内的宽度（px）。按盒高（size×9/16≈107px）的八成留，
- *  这样露出来的脑袋大小跟平时差不多，不会缩水成一半。 */
-const VISIBLE_PX = 82;
+/** 贴边后留在屏幕内的量（px）。上下边按盒高（size×9/16≈107px）的八成留，
+ *  脑袋大小跟平时差不多；左右边留得多一些，否则只剩半张脸。 */
+const VISIBLE_V = 82;
+const VISIBLE_H = 120;
+
+/** 某条边露在屏幕内的像素。 */
+const visiblePx = (edge: DockEdge): number => (edge === 'left' || edge === 'right' ? VISIBLE_H : VISIBLE_V);
 
 /** 注入的 react 能力。 */
 export interface DockRuntime {
@@ -118,13 +122,13 @@ export function createCardDock(rt: DockRuntime) {
       const cur = apiRef.current.motion.box() ?? { x: 0, y: 0 };
       switch (edge) {
         case 'left':
-          return { x: VISIBLE_PX - vp.half.w * 2, y: cur.y };
+          return { x: VISIBLE_H - vp.half.w * 2, y: cur.y };
         case 'right':
-          return { x: vp.width - VISIBLE_PX, y: cur.y };
+          return { x: vp.width - VISIBLE_H, y: cur.y };
         case 'top':
-          return { x: cur.x, y: VISIBLE_PX - vp.half.h * 2 };
+          return { x: cur.x, y: VISIBLE_V - vp.half.h * 2 };
         default:
-          return { x: cur.x, y: vp.height - VISIBLE_PX };
+          return { x: cur.x, y: vp.height - VISIBLE_V };
       }
     };
 
