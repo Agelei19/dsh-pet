@@ -182,3 +182,10 @@ window.__dshPetDebug = {
 window.addEventListener('error', (event) => {
   window.__dshPetDebug.errors.push(String(event.message || event.error));
 });
+
+/** 拖到屏幕边多近就吸附（CSS px）。 */
+const DOCK_TRIGGER_PX = 96;
+/** 贴边后左侧/右侧还剩多少露在屏内（CSS px）。 */
+const DOCK_VISIBLE_W = 96;
+/** 贴边后上侧/下侧还剩多少露在屏内（CSS px）。 */
+const DOCK_VISIBLE_H = 64;

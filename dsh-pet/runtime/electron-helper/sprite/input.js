@@ -9,6 +9,14 @@
 
 Object.assign(PetSprite.prototype, {
   onPointerDown(e) {
+    // 扒在屏幕边上时按下：先下来（回到贴边前的位置），这一下不进入拖拽。
+    if (this.dockedTo) {
+      const back = this.dockedTo.back;
+      this.dockedTo = null;
+      this.sendBounds(back.x, back.y);
+      this.playIdle();
+      return;
+    }
     // 只认左键：右键进入拖拽判定会与右键菜单打架
     if (e.button !== 0) return;
     // 占用锁：用户点了或拖了这只宠物 = 用户接管，立刻撤掉第三方占用。这是唯一一处「渲染端 → 宿主」
@@ -106,6 +114,43 @@ Object.assign(PetSprite.prototype, {
     this.dragState.anchorY = this.pos.y + this.halfH;
   },
 
+  /**
+   * 拖到屏幕边缘附近（96px 内）就吸附：窗口挪到只剩一小条在屏内，播该边的探头动画。
+   *
+   * @param px - 松手时宠物的窗口左上角 X（CSS px，世界坐标）。
+   * @param py - 同上 Y。
+   * @returns 是否已经吸附（吸附后不再走抛掷/放下）。
+   */
+  tryDock(px, py) {
+    const W = VIEW.w;
+    const H = VIEW.h;
+    const d = {
+      bottom: H - (py + this.size),
+      left: px,
+      right: W - (px + this.size),
+      top: py,
+    };
+    const edges = ['left', 'right', 'top', 'bottom'];
+    const edge = edges.reduce((best, k) => (d[k] < d[best] ? k : best), 'right');
+    if (d[edge] > DOCK_TRIGGER_PX) return false;
+    const animName = { bottom: '探头往下', left: '探头往左', right: '探头往右', top: '探头往上' }[edge];
+    const pools = this.animations || {};
+    const known = Object.keys(pools).some(
+      (k) => Array.isArray(pools[k]) && pools[k].includes(animName),
+    );
+    if (!known) return false;
+    let x = px;
+    let y = py;
+    if (edge === 'left') x = DOCK_VISIBLE_W - this.size;
+    else if (edge === 'right') x = W - DOCK_VISIBLE_W;
+    else if (edge === 'top') y = DOCK_VISIBLE_H - this.size;
+    else y = H - DOCK_VISIBLE_H;
+    this.dockedTo = { back: { x: px, y: py }, edge };
+    this.sendBounds(x, y);
+    this.switchTo(animName, false);
+    return true;
+  },
+
   onPointerMove(e) {
     const d = this.dragState;
     if (!d.active) return;
@@ -177,6 +222,8 @@ Object.assign(PetSprite.prototype, {
       // 释放位置 = 弹簧跟随后的实际包围盒左上角（不是指针目标：滞后时落点应跟随宠物实际位置）
       const px = this.pos.x;
       const py = this.pos.y;
+      // 贴边：拖到屏幕边缘附近松手就吸附到那条边（只留一小条在屏内），并播该边的探头动作。
+      if (!d.sling && this.tryDock(px, py)) return;
       if (d.sling) {
         // 弹弓：力度 = 拉距（与手速无关），方向 = 拉的反方向；拉向量用宠物实际中心算
         // （弹簧有滞后，用户看到的是宠物被拉出去多远）。之后与甩抛走同一条 startThrow。

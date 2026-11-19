@@ -1,6 +1,6 @@
 {
   "name": "puppy",
-  "version": "0.7.6",
+  "version": "0.7.7",
   "description": "桌面小狗宠物：一只叫小狗的金毛，会呼吸、摇尾巴、从背后掏骨头，并在桌面上实时说任务进度（DeepSeek Harness 插件）",
   "icon": "assets/logo.png",
   "keywords": [
