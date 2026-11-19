@@ -16,6 +16,9 @@ Object.assign(PetSprite.prototype, {
       this.dockedTo = null;
       this.playIdle();
     }
+    // 从边上解绑后要先把宠物拖离边缘一段，才允许再次吸附——否则按下那一刻它就贴在边上，
+    // 第一帧 pointermove 立刻又被判定「到边了」，永远拖不出来。
+    this.dockArmed = false;
     // 只认左键：右键进入拖拽判定会与右键菜单打架
     if (e.button !== 0) return;
     // 占用锁：用户点了或拖了这只宠物 = 用户接管，立刻撤掉第三方占用。这是唯一一处「渲染端 → 宿主」
@@ -172,16 +175,18 @@ Object.assign(PetSprite.prototype, {
     // 弹簧目标 = 按下时的宠物位置 + 指针屏幕增量（窗口怎么动都不影响坐标），由 rAF 逐帧追赶
     this.dragTarget = { x: d.petX + dx, y: d.petY + dy };
     this.startDragFollow();
-    // 拖到屏幕边缘就吸附（不必等松手）：宠物盒子贴住某条边 8px 内，直接按松手处理。
+    // 拖到屏幕边缘就吸附（不必等松手）：先把宠物拖离边缘 24px 以上「武装」，之后贴回 8px 内才吸附。
+    // 不武装的话，从边上按住的那一刻它就贴在边上，第一帧就会再次吸附，等于永远拖不出来。
     const W = VIEW.w;
     const H = VIEW.h;
-    const near = Math.min(
+    const nearEdge = Math.min(
       this.pos.x,
       this.pos.y,
       W - (this.pos.x + this.size),
       H - (this.pos.y + this.size),
     );
-    if (near <= 8) this.onPointerUp(e);
+    if (nearEdge > 24) this.dockArmed = true;
+    if (this.dockArmed && nearEdge <= 8) this.onPointerUp(e);
   },
 
   onPointerUp(e) {

@@ -85,6 +85,7 @@ export function createCardDock(rt: DockRuntime) {
   return function useCardDock(input: DockInput): Dock {
     const apiRef = useRef(input);
     apiRef.current = input;
+    const armedRef = useRef(true);
     const dockedRef = useRef<{ back: Center; edge: DockEdge } | null>(null);
     const peekTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const peekHoldRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -204,7 +205,10 @@ export function createCardDock(rt: DockRuntime) {
           ['bottom', h - e.clientY],
         ];
         const [edge, dist] = d.reduce((a, b) => (b[1] < a[1] ? b : a));
-        return dist <= EDGE_BAND_PX ? edge : null;
+        // 从边上按住往外拖的那一刻，指针还在边缘带里；必须先离开一段才「武装」，
+        // 否则第一帧就又判定到边了，拖不出来。
+        if (dist > EDGE_BAND_PX * 4) armedRef.current = true;
+        return armedRef.current && dist <= EDGE_BAND_PX ? edge : null;
       },
       force: (edge: DockEdge) => dock(edge),
       /**
@@ -217,6 +221,7 @@ export function createCardDock(rt: DockRuntime) {
         const state = dockedRef.current;
         clearTimers();
         dockedRef.current = null;
+        armedRef.current = false; // 解绑后重新武装，才不会被第一帧立刻吸回去
         return state === null ? null : state.back;
       },
       /** 回到给定位置（点一下边上的宠物时用）。 */
