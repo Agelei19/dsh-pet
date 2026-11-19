@@ -39,9 +39,9 @@
       },
       "icon": "icon.png",
       "author": "Agelei19",
-      "homepage": "https://github.com/Agelei19/dsh-pet",
+      "homepage": "https://github.com/Agelei19/dsh-pet-puppy",
       "repository": {
-        "url": "https://github.com/Agelei19/dsh-pet",
+        "url": "https://github.com/Agelei19/dsh-pet-puppy",
         "directory": "dsh-pet"
       },
       "metadata": {
@@ -59,11 +59,11 @@
       "versions": [
         {
           "version": "0.6.2",
-          "publishTimestamp": 1795053444,
+          "publishTimestamp": 1795053472,
           "source": {
             "type": "git",
-            "url": "https://github.com/Agelei19/dsh-pet",
-            "commit": "e7943074058a6fb26c1e68ce3e73a3860ce8ab5d",
+            "url": "https://github.com/Agelei19/dsh-pet-puppy",
+            "commit": "e8d41a0c601fcb192c049792c8bad302d39bf7ff",
             "path": "dsh-pet"
           }
         }
