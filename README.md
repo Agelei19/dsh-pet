@@ -2,11 +2,11 @@
 
 <p align="center">
   <img alt="platform" src="https://img.shields.io/badge/platform-DeepSeek%20Harness%20Web-8A2BE2">
-  <img alt="assets" src="https://img.shields.io/badge/assets-47%20animations-ff69b4">
+  <img alt="assets" src="https://img.shields.io/badge/assets-51%20animations-ff69b4">
   <a href="LICENSE"><img alt="license" src="https://img.shields.io/badge/license-MIT-orange"></a>
 </p>
 
-一只住在 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) 里的桌面宠物：**圆滚滚的小金毛「小狗」（插件名 `puppy`）**。它管你叫妈妈，最爱的就是妈妈。待机呼吸、歪头张望、随机小动作（撒娇、掏骨头、哼歌、打盹）、左右转向、屏幕漫游、点击 Q 弹、拖拽甩抛反弹，47 段透明动画带着表情和道具变化随时无缝衔接（打滚、亲亲、侧趴睡、仰面睡、团成球）；还会跟随 DSH 会话事件切换工作状态动画、按档位播放余额动画、碎碎念与对话聊天、窗口失焦时弹系统通知。可多开同屏，能脱离浏览器住上**桌面**（透明置顶小窗），也能自己添加**全新宠物种类**（pet pack）。
+一只住在 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) 里的桌面宠物：**圆滚滚的小金毛「小狗」（插件名 `puppy`）**。它管你叫妈妈，最爱的就是妈妈。待机呼吸、歪头张望、随机小动作（撒娇、掏骨头、哼歌、打盹）、左右转向、屏幕漫游、点击 Q 弹、拖拽甩抛反弹，51 段透明动画带着表情和道具变化随时无缝衔接（打滚、亲亲、侧趴睡、仰面睡、团成球）；还会跟随 DSH 会话事件切换工作状态动画、按档位播放余额动画、碎碎念与对话聊天、窗口失焦时弹系统通知。可多开同屏，能脱离浏览器住上**桌面**（透明置顶小窗），也能自己添加**全新宠物种类**（pet pack）。
 
 > 本仓库是 [PC2005-cloud/dsh-pet](https://github.com/PC2005-cloud/dsh-pet) 的 fork，代码 MIT；主角换成一只金毛小狗「小狗」，名字叫 **puppy**。
 
@@ -184,5 +184,5 @@ AI 提示词 → 绿幕视频 → 透明动画 → 插件，换角色、换动�
 ## 许可
 
 - **代码**：MIT，来自上游 [PC2005-cloud/dsh-pet](https://github.com/PC2005-cloud/dsh-pet)（Copyright (c) 2026 PC2005-cloud）。保留原 `LICENSE` 与署名即可自由使用、修改、再分发。
-- **角色与动画**：AI 生成。主形象用 MOSS-Image 文生图后经 `scripts/` 修线上色；47 段动画用 Wan2.2 图生视频（首尾帧约束）生成，再由本仓库脚本抠像、调色、编码。提示词在 `prompts/`，可复现。
+- **角色与动画**：AI 生成。主形象用 MOSS-Image 文生图后经 `scripts/` 修线上色；51 段动画用 Wan2.2 图生视频（首尾帧约束）生成，再由本仓库脚本抠像、调色、编码。提示词在 `prompts/`，可复现。
 - **依赖**：`openai`、`@anthropic-ai/sdk`、`zod`、Electron 工具链均为宽松许可。可选语音朗读用 `@andresaya/edge-tts`（GPL-3.0-only），它是运行时动态 `import()` 的独立 npm 包、不内联进 `lib/`；把整包打成一个文件发行时会受 GPL 约束，那时去掉语音或按 GPL-3.0 发行。
