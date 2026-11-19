@@ -7254,7 +7254,7 @@ function trackToolPhase(ledger, sessionId, phase, lastTodo) {
 		if (!pending$1) ledger.set(sessionId, pending$1 = new Map());
 		pending$1.set(phase.callId ?? Symbol(), phase.detail);
 		return {
-			task: phase.detail,
+			task: lastTodo ?? phase.detail,
 			keepWorking: true
 		};
 	}

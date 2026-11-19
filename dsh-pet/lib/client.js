@@ -13984,7 +13984,7 @@ function createCueEffects(rt) {
 			}
 		};
 		/**
-		* 开一个进度播报定时器：每隔 CHATTER_MS 换一句气泡文案，任务详情与档位台词交替出现。
+		* 开一个进度播报定时器：每隔 45 秒换一句气泡文案，任务详情与档位台词交替出现。
 		* 任务详情是「第几步/共几步 + 在做什么」，比档位台词有信息量，所以占多数轮次；
 		* 台词轮次让宠物保持「在说话」的感觉。睡眠和终态由调用方 stop。
 		*/
@@ -14007,7 +14007,7 @@ function createCueEffects(rt) {
 					return;
 				}
 				hub.bubbles.updateWorkText(line$1 ?? current$1);
-			}, 18e3);
+			}, 45e3);
 		};
 		/** 工作状态联动：按档位播动画并弹文本气泡；回空闲时收起气泡并改播完即停。 */
 		const consumeWorkStatus = () => {

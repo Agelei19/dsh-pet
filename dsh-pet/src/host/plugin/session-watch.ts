@@ -95,7 +95,9 @@ function trackToolPhase(
     let pending = ledger.get(sessionId);
     if (!pending) ledger.set(sessionId, (pending = new Map()));
     pending.set(phase.callId ?? Symbol(), phase.detail);
-    return { task: phase.detail, keepWorking: true };
+    // 有 todo 清单时优先报「第几步在做什么」：工具名对妈妈没有信息量，而且每次调用都会换一句，
+    // 一分钟能刷十几次。没有清单才退回工具详情。
+    return { task: lastTodo ?? phase.detail, keepWorking: true };
   }
   const pending = ledger.get(sessionId);
   // 缺标识的结果只释放一个匿名条目：不猜它是哪个具名调用，宁可少记一条也不删错别人的。
