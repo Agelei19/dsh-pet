@@ -24,9 +24,6 @@ const EDGE_ANIM: Record<DockEdge, string> = {
 };
 
 /** 松手时离边缘多近就贴上（px）。 */
-/** 拖拽途中指针离屏幕边多近就直接吸附（逻辑像素）。 */
-const EDGE_BAND_PX = 8;
-const TRIGGER_PX = 96;
 /** 贴边后留在屏幕内的量（px）。上下边按盒高（size×9/16≈107px）的八成留，
  *  脑袋大小跟平时差不多；左右边留得多一些，否则只剩半张脸。 */
 const VISIBLE_V = 64;
@@ -107,23 +104,6 @@ export function createCardDock(rt: DockRuntime) {
       return { half: { h: halfH, w: halfW }, height: window.innerHeight, width: window.innerWidth };
     };
 
-    /** 离最近的一条边有多近、是哪条边。 */
-    const nearestEdge = (): { distance: number; edge: DockEdge } => {
-      const vp = viewport();
-      const box = apiRef.current.motion.box() ?? { x: 0, y: 0 };
-      // 距离按「盒子边缘到屏幕边缘」算，不是中心：按中心算的话左右两侧要半只身子出屏才够近，
-      // 而 clampReachableBox 根本不让拖出去，永远触发不了。
-      const d = {
-        bottom: vp.height - (box.y + vp.half.h * 2),
-        left: box.x,
-        right: vp.width - (box.x + vp.half.w * 2),
-        top: box.y,
-      };
-      const edges = Object.keys(d) as DockEdge[];
-      const edge = edges.reduce((best, k) => (d[k] < d[best] ? k : best), 'right' as DockEdge);
-      return { distance: d[edge], edge };
-    };
-
     /** 「挂在边上」的盒子。 */
     const edgeBox = (edge: DockEdge): { x: number; y: number } => {
       const vp = viewport();
@@ -194,21 +174,24 @@ export function createCardDock(rt: DockRuntime) {
        * 拖拽途中指针进入边缘带就返回那条边（8px 内），由调用方结束拖拽后调 force()。
        * 用户说得对：贴边该是「拖到屏幕边缘就触发」，不该等到松手。
        */
-      hover: (e: { clientX: number; clientY: number }): DockEdge | null => {
+      hover: (): DockEdge | null => {
         if (dockedRef.current !== null) return null;
+        const box = apiRef.current.motion.box();
+        if (box === null) return null;
+        const { halfH, halfW, size } = apiRef.current.metrics;
         const w = window.innerWidth;
         const h = window.innerHeight;
-        const d: Array<[DockEdge, number]> = [
-          ['left', e.clientX],
-          ['right', w - e.clientX],
-          ['top', e.clientY],
-          ['bottom', h - e.clientY],
+        // 判定的是「被屏幕边遮住了多少」：过半才算贴边（用户要的是「半只以上被挡住」）。
+        const hide: Array<[DockEdge, number]> = [
+          ['left', -box.x],
+          ['right', box.x + halfW * 2 - w],
+          ['top', -box.y],
+          ['bottom', box.y + halfH * 2 - h],
         ];
-        const [edge, dist] = d.reduce((a, b) => (b[1] < a[1] ? b : a));
-        // 从边上按住往外拖的那一刻，指针还在边缘带里；必须先离开一段才「武装」，
-        // 否则第一帧就又判定到边了，拖不出来。
-        if (dist > EDGE_BAND_PX * 4) armedRef.current = true;
-        return armedRef.current && dist <= EDGE_BAND_PX ? edge : null;
+        const [edge, hidden] = hide.reduce((a, b) => (b[1] > a[1] ? b : a));
+        // 解绑后要先把它拖出来（遮挡小于三成才重新武装），否则贴边状态下第一帧又被吸回去。
+        if (hidden < size * 0.3) armedRef.current = true;
+        return armedRef.current && hidden >= size * 0.5 ? edge : null;
       },
       force: (edge: DockEdge) => dock(edge),
       /**
@@ -228,8 +211,19 @@ export function createCardDock(rt: DockRuntime) {
       restore: (back: Center) => apiRef.current.setCustomPos(back),
       settle: () => {
         if (dockedRef.current !== null) return;
-        const { distance, edge } = nearestEdge();
-        if (distance <= TRIGGER_PX) dock(edge);
+        const box = apiRef.current.motion.box();
+        if (box === null) return;
+        const { halfH, halfW, size } = apiRef.current.metrics;
+        const w = window.innerWidth;
+        const h = window.innerHeight;
+        const hide: Array<[DockEdge, number]> = [
+          ['left', -box.x],
+          ['right', box.x + halfW * 2 - w],
+          ['top', -box.y],
+          ['bottom', box.y + halfH * 2 - h],
+        ];
+        const [edge, hidden] = hide.reduce((a, b) => (b[1] > a[1] ? b : a));
+        if (hidden >= size * 0.5) dock(edge);
       },
       wake,
     };

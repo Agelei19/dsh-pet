@@ -126,15 +126,16 @@ Object.assign(PetSprite.prototype, {
   tryDock(px, py) {
     const W = VIEW.w;
     const H = VIEW.h;
-    const d = {
-      bottom: H - (py + this.size),
-      left: px,
-      right: W - (px + this.size),
-      top: py,
+    // 只有「半只以上被屏边遮住」才贴边：这样拖到边缘时不会一碰就吸，得真的推出去一半。
+    const hide = {
+      bottom: py + this.size - H,
+      left: -px,
+      right: px + this.size - W,
+      top: -py,
     };
     const edges = ['left', 'right', 'top', 'bottom'];
-    const edge = edges.reduce((best, k) => (d[k] < d[best] ? k : best), 'right');
-    if (d[edge] > DOCK_TRIGGER_PX) return false;
+    const edge = edges.reduce((best, k) => (hide[k] > hide[best] ? k : best), 'right');
+    if (hide[edge] < this.size * 0.5) return false;
     const animName = { bottom: '探头往下', left: '探头往左', right: '探头往右', top: '探头往上' }[edge];
     const pools = this.animations || {};
     const known = Object.keys(pools).some(
@@ -177,16 +178,17 @@ Object.assign(PetSprite.prototype, {
     this.startDragFollow();
     // 拖到屏幕边缘就吸附（不必等松手）：先把宠物拖离边缘 24px 以上「武装」，之后贴回 8px 内才吸附。
     // 不武装的话，从边上按住的那一刻它就贴在边上，第一帧就会再次吸附，等于永远拖不出来。
+    // 判定「被屏幕边遮住了多少」：过半才贴边（用户要的是「半只以上被挡住」）。
     const W = VIEW.w;
     const H = VIEW.h;
-    const nearEdge = Math.min(
-      this.pos.x,
-      this.pos.y,
-      W - (this.pos.x + this.size),
-      H - (this.pos.y + this.size),
+    const hidden = Math.max(
+      -this.pos.x,
+      -this.pos.y,
+      this.pos.x + this.size - W,
+      this.pos.y + this.size - H,
     );
-    if (nearEdge > 24) this.dockArmed = true;
-    if (this.dockArmed && nearEdge <= 8) this.onPointerUp(e);
+    if (hidden < this.size * 0.3) this.dockArmed = true;
+    if (this.dockArmed && hidden >= this.size * 0.5) this.onPointerUp(e);
   },
 
   onPointerUp(e) {
