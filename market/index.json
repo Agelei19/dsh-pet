@@ -35,7 +35,7 @@
       },
       "description": {
         "en": "A round little golden puppy that lives on your desktop: breathes, wags, rolls over, sleeps on its side and pulls bones out from behind its back. 47 hand-directed animations.",
-        "zh": "一只圆滚滚的小金毛住进你的桌面：会呼吸、会摇尾巴、会打个滚、会侧趴睡觉，还会从背后掏出骨头。47 段动画，会自己跟妈妈撒娇。"
+        "zh": "一只圆滚滚的小金毛住进你的桌面：会呼吸、会摇尾巴、会打个滚、会侧趴睡觉，还会从背后掏出骨头。47 段动画，干活时在头顶报进度。"
       },
       "icon": "icon.png",
       "author": "Agelei19",
@@ -58,12 +58,12 @@
       },
       "versions": [
         {
-          "version": "0.6.0",
-          "publishTimestamp": 1795026486,
+          "version": "0.6.1",
+          "publishTimestamp": 1795052456,
           "source": {
             "type": "git",
             "url": "https://github.com/Agelei19/dsh-pet",
-            "commit": "b9857b80da2d7e69c0d8fa4d9ab88434cd7dab3d",
+            "commit": "dd94d21082ad2e56bccc87936cc6b937f0f7f8a3",
             "path": "dsh-pet"
           }
         }
