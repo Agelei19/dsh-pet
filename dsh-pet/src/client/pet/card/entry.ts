@@ -87,6 +87,8 @@ export interface CardEntry {
   onPointerEnter: (e: ReactNS.PointerEvent<HTMLDivElement>) => void;
   /** 指针离开：收起提示。 */
   onPointerLeave: () => void;
+  /** 指针是否停在宠物上（贴边收起用它判断能不能自己收起来）。 */
+  isHovered: () => boolean;
 }
 
 /**
@@ -394,6 +396,7 @@ export function createCardEntry(rt: CardEntryRuntime) {
 
     return {
       handleContextMenu,
+      isHovered: () => hoverRef.current,
       onPointerEnter: (e) => {
         hoverRef.current = true;
         placeTip(e.clientX, e.clientY); // 先摆位再显示，否则会先在兜底坐标闪一帧。

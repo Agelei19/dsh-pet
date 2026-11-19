@@ -11,6 +11,7 @@ import { registerLifecycle } from './plugin/lifecycle.ts';
 import { registerChatCommand } from './plugin/command-chat.ts';
 import { registerPetCommand } from './plugin/command-pet.ts';
 import { registerLoops } from './plugin/loops.ts';
+import { registerUpdateLoop } from './plugin/update-loop.ts';
 import { registerBalanceCommand } from './plugin/command-balance.ts';
 import { registerSessionWatch } from './plugin/session-watch.ts';
 import { createDesktopHelper } from './plugin/desktop-helper.ts';
@@ -240,6 +241,9 @@ export function apply(ctx: any): void {
     standaloneAiPolicy,
     whisperPeriodSec,
   });
+
+  // 版本检查：新版本只提示一次，写进 sections.notify 由浏览器弹 toast。
+  registerUpdateLoop({ ctx, log, state });
 
   registerPetCommand({ ctx, effectivePetList, petDisplayName, resolveActivePetId, setActivePetId });
 

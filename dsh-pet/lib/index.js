@@ -6589,6 +6589,103 @@ function sleepTalkPeriodSec(conf) {
 }
 
 //#endregion
+//#region src/host/update-check.ts
+const DEFAULT_INDEX_URL = "https://raw.githubusercontent.com/Agelei19/dsh-pet-puppy/puppy/market/index.json";
+/** 本仓库在索引里的插件名。 */
+const PLUGIN_NAME = "puppy";
+function readLocalVersion() {
+	try {
+		const raw = readFileSync(join(PACKAGE_ROOT, "package.json"), "utf8");
+		const pkg = JSON.parse(raw);
+		return typeof pkg.version === "string" && pkg.version ? pkg.version : "0.0.0";
+	} catch {
+		return "0.0.0";
+	}
+}
+function compareVersions(a, b) {
+	const parse = (v) => v.split("-")[0].split(".").map((part) => {
+		const n = Number.parseInt(part, 10);
+		return Number.isFinite(n) ? n : 0;
+	});
+	const left = parse(a);
+	const right = parse(b);
+	for (let i = 0; i < Math.max(left.length, right.length); i += 1) {
+		const d = (left[i] ?? 0) - (right[i] ?? 0);
+		if (d !== 0) return d;
+	}
+	return 0;
+}
+function latestVersionOf(index) {
+	const plugins = index?.plugins;
+	if (!Array.isArray(plugins)) return null;
+	const entry = plugins.find((p) => p && p.name === PLUGIN_NAME) ?? null;
+	if (!entry || !Array.isArray(entry.versions)) return null;
+	const versions = entry.versions.map((v) => v && typeof v.version === "string" ? v.version : "").filter((v) => v !== "");
+	if (versions.length === 0) return null;
+	return versions.reduce((best, v) => compareVersions(v, best) > 0 ? v : best, versions[0]);
+}
+async function checkUpdate(options = {}) {
+	const indexUrl = options.indexUrl ?? DEFAULT_INDEX_URL;
+	const current = options.current ?? readLocalVersion();
+	try {
+		const index = await fetchJson(indexUrl, {
+			label: "plugin-index",
+			fetchImpl: options.fetchImpl
+		});
+		const latest = latestVersionOf(index);
+		if (latest === null || compareVersions(latest, current) <= 0) return null;
+		return {
+			current,
+			latest,
+			url: "https://github.com/Agelei19/dsh-pet-puppy"
+		};
+	} catch {
+		return null;
+	}
+}
+
+//#endregion
+//#region src/host/plugin/update-loop.ts
+/** 首次检查的延迟（ms）：先让宿主把界面拉起来，别和启动抢带宽。 */
+const FIRST_DELAY_MS = 2e4;
+/** 检查周期（ms）：一天一次，够用且不烦人。 */
+const PERIOD_MS = 24 * 60 * 60 * 1e3;
+function registerUpdateLoop(deps) {
+	const { ctx, log, state } = deps;
+	const check = deps.check ?? (() => checkUpdate());
+	ctx.effect(() => {
+		let disposed = false;
+		let timer = null;
+		let notified = null;
+		async function tick() {
+			try {
+				const info = await check();
+				if (disposed) return;
+				if (info && info.latest !== notified) {
+					notified = info.latest;
+					state.writeSection("notify", {
+						type: "plugin/update",
+						current: info.current,
+						latest: info.latest,
+						url: info.url
+					});
+					log.info("[puppy] 发现新版本 " + info.latest + "（当前 " + info.current + "）");
+				}
+			} catch (e) {
+				log.warn("[puppy] 版本检查失败：" + (e instanceof Error ? e.message : String(e)));
+			} finally {
+				if (!disposed) timer = setTimeout(() => void tick(), PERIOD_MS);
+			}
+		}
+		timer = setTimeout(() => void tick(), FIRST_DELAY_MS);
+		return () => {
+			disposed = true;
+			if (timer !== null) clearTimeout(timer);
+		};
+	}, "puppy: update check");
+}
+
+//#endregion
 //#region src/host/plugin/command-balance.ts
 function registerBalanceCommand(deps) {
 	const { ctx, effectivePetList, refreshBalance, sleep, sleepRefusalText } = deps;
@@ -10972,6 +11069,11 @@ function apply(ctx) {
 		sleep,
 		standaloneAiPolicy,
 		whisperPeriodSec
+	});
+	registerUpdateLoop({
+		ctx,
+		log,
+		state
 	});
 	registerPetCommand({
 		ctx,

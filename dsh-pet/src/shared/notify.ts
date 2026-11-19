@@ -12,6 +12,7 @@ export const NOTIFY_ICONS = {
   truncated: 'notify-truncated',
   approval: 'notify-approval',
   question: 'notify-question',
+  update: 'notify-done',
   test: 'notify-test',
 } as const;
 
@@ -112,6 +113,15 @@ export function frameToToast(
       const q =
         (Array.isArray(frame.questions) && (frame.questions as Array<{ question?: string }>)[0]?.question) || '';
       return { title: composeTitle(sessionTitle, '模型在等你回答'), body: q, icon: NOTIFY_ICONS.question };
+    }
+    case 'plugin/update': {
+      const current = typeof frame.current === 'string' ? frame.current : '';
+      const latest = typeof frame.latest === 'string' ? frame.latest : '';
+      return {
+        title: '小狗有新版本',
+        body: latest ? (current ? current + ' → ' + latest : latest) + '，刷新后重装即可' : '有新版本可用',
+        icon: NOTIFY_ICONS.update,
+      };
     }
     case 'host/agent-error': {
       return {

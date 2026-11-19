@@ -3731,6 +3731,7 @@ const NOTIFY_ICONS$1 = {
 	truncated: "notify-truncated",
 	approval: "notify-approval",
 	question: "notify-question",
+	update: "notify-done",
 	test: "notify-test"
 };
 const MAX_BODY = 80;
@@ -3791,6 +3792,15 @@ function frameToToast(frame, sessionTitle) {
 				title: composeTitle(sessionTitle, "模型在等你回答"),
 				body: q,
 				icon: NOTIFY_ICONS$1.question
+			};
+		}
+		case "plugin/update": {
+			const current$1 = typeof frame.current === "string" ? frame.current : "";
+			const latest$1 = typeof frame.latest === "string" ? frame.latest : "";
+			return {
+				title: "小狗有新版本",
+				body: latest$1 ? (current$1 ? current$1 + " → " + latest$1 : latest$1) + "，刷新后重装即可" : "有新版本可用",
+				icon: NOTIFY_ICONS$1.update
 			};
 		}
 		case "host/agent-error": return {
@@ -12956,6 +12966,7 @@ function createCardEntry(rt) {
 		};
 		return {
 			handleContextMenu,
+			isHovered: () => hoverRef.current,
 			onPointerEnter: (e) => {
 				hoverRef.current = true;
 				placeTip(e.clientX, e.clientY);
@@ -14347,6 +14358,23 @@ function createCardRuntime(rt) {
 			toggleTodo: bubbles.toggleTodo
 		});
 		entryRef.current = entry;
+		const dock = useCardDock({
+			card,
+			cfgRef,
+			isBusy: () => drag.isActive() || drag.justDragged(),
+			isHovered: () => entryRef.current?.isHovered() ?? false,
+			live: liveRef,
+			metrics: {
+				bottomPad,
+				halfH,
+				halfW,
+				size
+			},
+			motion,
+			setAnim: actions.setAnim,
+			setCustomPos: actions.setCustomPos,
+			setOnce: actions.setOnce
+		});
 		menuActionsRef.current ?? (menuActionsRef.current = createMenuActions({
 			animations: () => cfgRef.current.animations,
 			applyMerged: (merged) => petBridge.reload(merged),
@@ -14449,8 +14477,14 @@ function createCardRuntime(rt) {
 				drag.onClick();
 			},
 			onContextMenu: entry.handleContextMenu,
-			onPointerDown: drag.onPointerDown,
-			onPointerEnter: entry.onPointerEnter,
+			onPointerDown: (e) => {
+				dock.wake();
+				drag.onPointerDown(e);
+			},
+			onPointerEnter: (e) => {
+				dock.wake();
+				entry.onPointerEnter(e);
+			},
 			onPointerLeave: entry.onPointerLeave,
 			onPointerMove: drag.onPointerMove,
 			onPointerUp: drag.onPointerUp,

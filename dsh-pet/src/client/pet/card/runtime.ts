@@ -21,6 +21,7 @@ import { createAnimationFlow } from './animation-flow.ts';
 import { createBubbleSlots } from './bubble-slots.ts';
 import { createCardAnimation } from './animation.ts';
 import { createCardDrag } from './drag.ts';
+import { createCardDock } from './dock.ts';
 import { createCardEntry, type CardEntry } from './entry.ts';
 import { createCardMotion } from './motion.ts';
 import { createCardState } from './state.ts';
@@ -195,6 +196,20 @@ export function createCardRuntime(rt: PetRuntime) {
     });
     entryRef.current = entry;
 
+    // 贴边收起：静置 30 秒自己去最近的边挂住，隔 11 秒探头一次；指针进来立刻收回。
+    const dock = useCardDock({
+      card,
+      cfgRef,
+      isBusy: () => drag.isActive() || drag.justDragged(),
+      isHovered: () => entryRef.current?.isHovered() ?? false,
+      live: liveRef,
+      metrics: { bottomPad, halfH, halfW, size },
+      motion,
+      setAnim: actions.setAnim,
+      setCustomPos: actions.setCustomPos,
+      setOnce: actions.setOnce,
+    });
+
     // 菜单动作派发：依赖运动、拖拽、提示与对话四处入口，所以放在它们之后。
     menuActionsRef.current ??= createMenuActions({
       animations: () => cfgRef.current.animations,
@@ -319,8 +334,14 @@ export function createCardRuntime(rt: PetRuntime) {
         drag.onClick();
       },
       onContextMenu: entry.handleContextMenu,
-      onPointerDown: drag.onPointerDown,
-      onPointerEnter: entry.onPointerEnter,
+      onPointerDown: (e) => {
+        dock.wake();
+        drag.onPointerDown(e);
+      },
+      onPointerEnter: (e) => {
+        dock.wake();
+        entry.onPointerEnter(e);
+      },
       onPointerLeave: entry.onPointerLeave,
       onPointerMove: drag.onPointerMove,
       onPointerUp: drag.onPointerUp,
