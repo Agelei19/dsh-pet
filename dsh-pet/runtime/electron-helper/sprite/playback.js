@@ -114,6 +114,21 @@ Object.assign(PetSprite.prototype, {
     void el.play().catch(() => {});
   },
 
+  /**
+   * 看门狗：改分辨率/缩放、显示器插拔后，桌面窗口可能整页被系统暂停或视频停在原地
+   * （表现为「小狗卡住不动」）。画面没在动就原地续播——不换源，保住当前动画。
+   *
+   * @returns 是否真的续播了一次（排查日志用）。
+   */
+  ensurePlaying() {
+    if (this.frozen) return false;
+    const el = this.front === 0 ? this.videoA : this.videoB;
+    if (!el || !this.anim) return false;
+    if (!el.paused && !el.ended) return false;
+    el.play().catch(() => {});
+    return true;
+  },
+
   playOnce(name, playbackId, url) {
     this.switchTo(name, true, playbackId, url);
   },

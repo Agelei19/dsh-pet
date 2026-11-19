@@ -139,8 +139,16 @@ if (window.petBridge && window.petBridge.onDisplays) {
     const prevView = { x: VIEW.x, y: VIEW.y, w: VIEW.w, h: VIEW.h };
     if (!applyDeskGeometry(geo)) return;
     for (const s of sprites) s.relayout(prevView);
+    // 改分辨率/缩放后视频可能被系统暂停，重挂完就地续播一次，别让小狗停在某一帧。
+    for (const s of sprites) s.ensurePlaying();
   });
 }
+
+// 播放看门狗：系统休眠唤醒、切换显示模式、串流重连都可能让 video 元素静默暂停，
+// 画面停住但窗口还在（用户看到的就是「卡住」）。没在动就原地续播。
+setInterval(() => {
+  for (const s of sprites) s.ensurePlaying();
+}, 3000);
 
 // 窗口内容区尺寸异常时按当前位置重新规整。
 // 守卫：拖拽/飞行/漫游中绝不重设位置——这三种状态下位置由输入或物理驱动，而 position() 会把

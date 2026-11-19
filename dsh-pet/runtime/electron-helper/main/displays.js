@@ -40,6 +40,11 @@ function createDisplaySync({ screen, petWindows, dpi }) {
       dpi.setPrimaryScale(real);
       petWindows.closeAll();
       petWindows.create();
+      // 新建的窗口要重新拿一次几何（closeAll/create 之间可能又变过），也让渲染端有一次重挂机会。
+      setTimeout(() => {
+        if (petWindows.state.windows.size === 0) return;
+        pushDisplays();
+      }, 1200).unref?.();
       console.error(
         '[dsh-pet-desktop-helper] primary scaleFactor ' +
           previous +
