@@ -37,8 +37,8 @@ import { TODO_FILE_NAME, TodoStore } from './todo/store.ts';
 import { join } from 'node:path';
 import type { PetRouteDeps } from './routes/types.ts';
 
-/** 插件行 id（与 cordis.patch.yml 一致） */
-export const name = 'pet';
+/** 插件行 id（必须与 cordis.patch.yml 的 id 一致，否则同名服务会被注册两次） */
+export const name = 'puppy';
 /** 需要注入的服务：webServer（路由）+ agentDefaultModel（当前服务商）+ credentials（凭证）+ llm（对话模型调用）+ commands（/balance 斜杠命令）+ connection（桌面 Helper「打开 AI 设置」用的已鉴权站点 URL） */
 export const inject = ['webServer', 'agentDefaultModel', 'credentials', 'llm', 'commands', 'connection'];
 
@@ -49,6 +49,12 @@ const REWRITE_QUERY_SYSTEM =
 /** 宿主插件主体：注册 `/dsh-pet-7340` 前缀路由与斜杠命令（/balance /pet /chat）；ctx 暂用 any（peer 类型包本地不可解析）。 */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- DSH 注入的 ctx（webServer/locale 等 service 无静态类型）
 export function apply(ctx: any): void {
+  // 同一个进程里只装配一次：DSH 偶尔会因层栈里重复的 entry 把同一插件激活两次，
+  // 那会让 petApi7340 这类同名服务被注册两遍（报 "has been registered"），也会把定时器翻倍。
+  const guard = globalThis as { __puppyHostApplied?: boolean };
+  if (guard.__puppyHostApplied) return;
+  guard.__puppyHostApplied = true;
+
   const setup = createHostSetup(ctx);
   const {
     userRoot,

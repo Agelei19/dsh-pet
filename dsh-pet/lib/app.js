@@ -10835,6 +10835,9 @@ function createHearService(options) {
 /** 检索查询的改写提示词：结合最近几轮还原指代，只要一条能拿去检索的查询，不要解释、不要多行。 */
 const REWRITE_QUERY_SYSTEM = "把用户这句话改写成一条用于检索长期记忆的查询：结合最近几轮对话还原「它」「那个」「继续」这类指代，保留检索需要的名词与限定词，去掉寒暄、语气词与称呼，不要解释、不要引号、不要换行。只输出这条查询本身。";
 function apply(ctx) {
+	const guard = globalThis;
+	if (guard.__puppyHostApplied) return;
+	guard.__puppyHostApplied = true;
 	const setup = createHostSetup(ctx);
 	const { userRoot, log: log$1, configPaths, thumbUserRoot, memeDirsFor, standaloneAiPolicy, standaloneAiBalance, state: state$1, playback, workStatus, EXTERNAL_WORK_SESSION, nextExternalWorkSeq } = setup;
 	const workStatusBridge = createWorkStatusBridge({
