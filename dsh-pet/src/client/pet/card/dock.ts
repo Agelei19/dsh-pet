@@ -27,8 +27,8 @@ const EDGE_ANIM: Record<DockEdge, string> = {
 const TRIGGER_PX = 96;
 /** 贴边后留在屏幕内的量（px）。上下边按盒高（size×9/16≈107px）的八成留，
  *  脑袋大小跟平时差不多；左右边留得多一些，否则只剩半张脸。 */
-const VISIBLE_V = 82;
-const VISIBLE_H = 120;
+const VISIBLE_V = 64;
+const VISIBLE_H = 96;
 
 /** 某条边露在屏幕内的像素。 */
 const visiblePx = (edge: DockEdge): number => (edge === 'left' || edge === 'right' ? VISIBLE_H : VISIBLE_V);
