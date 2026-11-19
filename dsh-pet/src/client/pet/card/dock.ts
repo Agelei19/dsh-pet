@@ -18,8 +18,8 @@ export type DockEdge = 'left' | 'right' | 'top' | 'bottom';
  *  只露出半边身子，读起来就是「从门边探出半个脑袋」。 */
 const EDGE_ANIM: Record<DockEdge, string> = {
   bottom: '探头往下',
-  left: '待机呼吸',
-  right: '待机呼吸',
+  left: '探头往左',
+  right: '探头往右',
   top: '探头往上',
 };
 
@@ -108,9 +108,14 @@ export function createCardDock(rt: DockRuntime) {
     const nearestEdge = (): { distance: number; edge: DockEdge } => {
       const vp = viewport();
       const box = apiRef.current.motion.box() ?? { x: 0, y: 0 };
-      const cx = box.x + vp.half.w;
-      const cy = box.y + vp.half.h;
-      const d = { bottom: vp.height - cy, left: cx, right: vp.width - cx, top: cy };
+      // 距离按「盒子边缘到屏幕边缘」算，不是中心：按中心算的话左右两侧要半只身子出屏才够近，
+      // 而 clampReachableBox 根本不让拖出去，永远触发不了。
+      const d = {
+        bottom: vp.height - (box.y + vp.half.h * 2),
+        left: box.x,
+        right: vp.width - (box.x + vp.half.w * 2),
+        top: box.y,
+      };
       const edges = Object.keys(d) as DockEdge[];
       const edge = edges.reduce((best, k) => (d[k] < d[best] ? k : best), 'right' as DockEdge);
       return { distance: d[edge], edge };
