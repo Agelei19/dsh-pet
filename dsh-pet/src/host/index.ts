@@ -54,6 +54,10 @@ export function apply(ctx: any): void {
   const guard = globalThis as { __puppyHostApplied?: boolean };
   if (guard.__puppyHostApplied) return;
   guard.__puppyHostApplied = true;
+  // 卸载时复位：DSH 的插件开关走的是 unload→load，复位后重新打开才能再装配一次。
+  ctx.effect(() => () => {
+    guard.__puppyHostApplied = false;
+  });
 
   const setup = createHostSetup(ctx);
   const {

@@ -10794,6 +10794,9 @@ function apply(ctx) {
 	const guard = globalThis;
 	if (guard.__puppyHostApplied) return;
 	guard.__puppyHostApplied = true;
+	ctx.effect(() => () => {
+		guard.__puppyHostApplied = false;
+	});
 	const setup = createHostSetup(ctx);
 	const { userRoot, log, configPaths, thumbUserRoot, memeDirsFor, standaloneAiPolicy, standaloneAiBalance, state, playback, workStatus, EXTERNAL_WORK_SESSION, nextExternalWorkSeq } = setup;
 	const workStatusBridge = createWorkStatusBridge({

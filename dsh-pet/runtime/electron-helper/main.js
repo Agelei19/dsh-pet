@@ -129,6 +129,27 @@ if (!DPI_PROBE && HOST_PID > 0) {
   }, HOST_POLL_MS).unref?.();
 }
 
+// ③ 插件探测：宿主进程可能还在，但插件被关闭/重载——那时 /dsh-pet-7340/config 会 404。
+// 连续 CONFIG_MISS_LIMIT 次拿不到就自己退（宿主进程存活也退），免得「插件关了桌宠还在」。
+const CONFIG_URL = process.env.DSH_PET_CONFIG_URL || '';
+const CONFIG_MISS_LIMIT = 3;
+let configMiss = 0;
+if (!DPI_PROBE && CONFIG_URL) {
+  setInterval(async () => {
+    try {
+      const res = await fetch(CONFIG_URL, { cache: 'no-store' });
+      if (res.ok) {
+        configMiss = 0;
+        return;
+      }
+      configMiss += 1;
+    } catch {
+      configMiss += 1;
+    }
+    if (configMiss >= CONFIG_MISS_LIMIT) exitForDeadHost();
+  }, 4000).unref?.();
+}
+
 // Windows 透明分层窗口（WS_EX_LAYERED）在 DWM 硬件加速合成下有缺陷：拖拽移动时窗口四周出现黑边、
 // 大透明窗移动覆盖小透明窗时后者内容丢失。本进程只渲染轻量宠物动画（640×360），改走软件合成；
 // 非 Windows 合成路径不同，保留硬件加速。
