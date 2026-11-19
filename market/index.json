@@ -58,12 +58,12 @@
       },
       "versions": [
         {
-          "version": "0.7.3",
-          "publishTimestamp": 1795079190,
+          "version": "0.7.4",
+          "publishTimestamp": 1795082245,
           "source": {
             "type": "git",
             "url": "https://github.com/Agelei19/dsh-pet-puppy",
-            "commit": "43d2946ca82eda95bfc05940ad815de0ad13f2d5",
+            "commit": "2501dc10550d2f1a9ed7283e0a9152a853743306",
             "path": "dsh-pet"
           }
         }
