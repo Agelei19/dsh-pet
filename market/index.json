@@ -59,11 +59,11 @@
       "versions": [
         {
           "version": "0.6.1",
-          "publishTimestamp": 1795052456,
+          "publishTimestamp": 1795053030,
           "source": {
             "type": "git",
             "url": "https://github.com/Agelei19/dsh-pet",
-            "commit": "dd94d21082ad2e56bccc87936cc6b937f0f7f8a3",
+            "commit": "6a59d034cea17b264f700f66258f111169e2f2e6",
             "path": "dsh-pet"
           }
         }
