@@ -173,6 +173,16 @@ Object.assign(PetSprite.prototype, {
     // 弹簧目标 = 按下时的宠物位置 + 指针屏幕增量（窗口怎么动都不影响坐标），由 rAF 逐帧追赶
     this.dragTarget = { x: d.petX + dx, y: d.petY + dy };
     this.startDragFollow();
+    // 拖到屏幕边缘就吸附（不必等松手）：宠物盒子贴住某条边 8px 内，直接按松手处理。
+    const W = VIEW.w;
+    const H = VIEW.h;
+    const near = Math.min(
+      this.pos.x,
+      this.pos.y,
+      W - (this.pos.x + this.size),
+      H - (this.pos.y + this.size),
+    );
+    if (near <= 8) this.onPointerUp(e);
   },
 
   onPointerUp(e) {
