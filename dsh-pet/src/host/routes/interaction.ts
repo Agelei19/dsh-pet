@@ -30,6 +30,20 @@ export async function handleInteractionRoutes(deps: PetRouteDeps, input: RouteIn
   // 与 /playback 的分工：那个是「这次点播播完没有」的回执，这个是「这段时间归谁控制」的租约。
   // 锁自己占一个叶子（pets.<id>.lock）：宿主停不掉正在播的视频，「完全静止」最终由渲染端执行。
   // 失败一律 HTTP 200 + 失败实体；方法错与坏 JSON 由协议构造器给真实状态码。
+  // 手动查一次更新：POST /update/check?pet=。查不到也回 ok（前端只提示「已是最新/检查失败」）。
+  // 定时检查在 plugin/update-loop，这条只是让人能立刻看一眼，不必等一天。
+  if (rest === 'update/check') {
+    if (method !== 'POST') return methodNotAllowed();
+    try {
+      const { checkUpdate } = await import('../update-check.ts');
+      const info = await checkUpdate();
+      if (info === null) return okResult({ ok: true, latest: '', current: '' });
+      return okResult({ current: info.current, latest: info.latest, ok: true, url: info.url });
+    } catch (e) {
+      return okResult({ error: e instanceof Error ? e.message : String(e), ok: true });
+    }
+  }
+
   if (rest === 'lock' || rest === 'lock/release') {
     const isRelease = rest === 'lock/release';
     if (method !== 'POST') return methodNotAllowed();

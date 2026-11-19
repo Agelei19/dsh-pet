@@ -1,7 +1,7 @@
 /**
- * 贴边收起：静置一段时间后自己溜到最近的屏幕边缘，只露一小截，之后隔一会儿探头探脑。
- * 判定只用指针与拖拽状态；位置提交仍走 `setCustomPos`（归一化中心），与其它运动驱动同一出口。
- * 四边各有一条探头动画：配置里存在同名动作才播，没有就只是挂在那里不动。
+ * 贴边探头：把小狗拖到屏幕边缘附近松手，它就扒在那条边上学「窗框里的狗」——下边扒着窗沿往上瞅、
+ * 上边倒挂着露头、左右从门边探出半个脑袋偷看；再点一下或拖走就下来。
+ * 位置提交仍走 `setCustomPos`（归一化中心），与其它运动驱动同一出口；不碰动画链内部。
  * @module dsh-pet/src/client/pet/card/dock
  */
 import { boxToRatio, clampReachableBox } from '../motion/geometry.ts';
@@ -22,16 +22,10 @@ const PEEK_ANIM: Record<DockEdge, string> = {
   top: '探头往上',
 };
 
-/** 静置多久开始贴边。 */
-const IDLE_MS = 30_000;
-/** 贴边后多久探一次头。 */
-const PEEK_MS = 11_000;
-/** 探头动作播多久后缩回去。 */
-const PEEK_HOLD_MS = 2_600;
-/** 贴边后命中区留在屏幕内的宽度（px）：比 MIN_REACHABLE_PX 多一点，够点到。 */
+/** 松手时离边缘多近就贴上（px）。 */
+const TRIGGER_PX = 96;
+/** 贴边后留在屏幕内的宽度（px）。 */
 const VISIBLE_PX = 58;
-/** 探头的位移幅度（px）：往屏幕里探出来一点点。 */
-const PEEK_SHIFT = 16;
 
 /** 注入的 react 能力。 */
 export interface DockRuntime {
@@ -41,17 +35,17 @@ export interface DockRuntime {
   useRef: <T>(initial: T) => ReactNS.MutableRefObject<T>;
 }
 
-/** 贴边收起的输入。 */
+/** 贴边探头的输入。 */
 export interface DockInput {
-  /** 卡状态：位置提交与当帧尺寸。 */
+  /** 卡状态：位置提交。 */
   card: CardStateApi;
-  /** 成品配置的最新值：取动画池。 */
+  /** 成品配置：取动画池。 */
   cfgRef: ReactNS.MutableRefObject<RuntimePet>;
   /** 装配根迟绑槽：读睡觉状态。 */
   live: ReactNS.MutableRefObject<{ flow?: { sleeping: () => boolean } | undefined }>;
   /** 运动面：读当前盒、停走位、写盒。 */
   motion: CardMotion;
-  /** 当帧几何（与运动面同一份）。 */
+  /** 当帧几何。 */
   metrics: { bottomPad: number; halfH: number; halfW: number; size: number };
   /** 提交归一化中心。 */
   setCustomPos: CardStateApi['actions']['setCustomPos'];
@@ -59,60 +53,43 @@ export interface DockInput {
   setAnim: (anim: string) => void;
   /** 只播一次。 */
   setOnce: (on: boolean) => void;
-  /** 指针是否停在宠物上。 */
-  isHovered: () => boolean;
-  /** 拖拽中或刚拖完。 */
-  isBusy: () => boolean;
 }
 
-/** 贴边收起的对外面。 */
+/** 贴边探头的对外面。 */
 export interface Dock {
-  /** 指针进入或用户操作：立刻收回并重排计时。 */
+  /** 松手：离边缘够近就扒上去，否则不动。 */
+  settle: () => void;
+  /** 从边上下来（点一下、拖一下、菜单都调它）。 */
   wake: () => void;
-  /** 只重排静置计时（拖着、点着的时候不收起）。 */
-  reset: () => void;
+  /** 当前是否扒在边上。 */
+  docked: () => boolean;
 }
 
 /**
- * 造贴边收起的 hook。
+ * 造贴边探头的 hook。
  *
  * @param rt - 注入的 react 能力。
- * @returns 接收装配输入的 hook，返回唤醒与重置两个入口。
+ * @returns 接收装配输入的 hook。
  */
 export function createCardDock(rt: DockRuntime) {
   const { useEffect, useRef } = rt;
 
   return function useCardDock(input: DockInput): Dock {
-    // 每次渲染都新建闭包，计时器里只读最新的那一份。
     const apiRef = useRef(input);
     apiRef.current = input;
-    // 收起状态：记住收在哪条边、收起前的位置，回来时原样放回。
     const dockedRef = useRef<{ back: Center; edge: DockEdge } | null>(null);
-    const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const peekTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-    const peekBackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const peekHoldRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-    /** 清掉全部计时器。 */
     const clearTimers = (): void => {
-      if (idleTimerRef.current !== null) {
-        clearTimeout(idleTimerRef.current);
-        idleTimerRef.current = null;
-      }
       if (peekTimerRef.current !== null) {
         clearInterval(peekTimerRef.current);
         peekTimerRef.current = null;
       }
-      if (peekBackTimerRef.current !== null) {
-        clearTimeout(peekBackTimerRef.current);
-        peekBackTimerRef.current = null;
+      if (peekHoldRef.current !== null) {
+        clearTimeout(peekHoldRef.current);
+        peekHoldRef.current = null;
       }
-    };
-
-    /** 现在这只能不能自己躲到边上：悬停、拖拽、睡觉都不收。 */
-    const canDock = (): boolean => {
-      const api = apiRef.current;
-      if (api.isBusy() || api.isHovered()) return false;
-      return api.live.current.flow?.sleeping() !== true;
     };
 
     /** 视口与盒尺寸。 */
@@ -121,16 +98,19 @@ export function createCardDock(rt: DockRuntime) {
       return { half: { h: halfH, w: halfW }, height: window.innerHeight, width: window.innerWidth };
     };
 
-    /** 离哪条边最近。 */
-    const nearestEdge = (vp: ReturnType<typeof viewport>): DockEdge => {
+    /** 离最近的一条边有多近、是哪条边。 */
+    const nearestEdge = (): { distance: number; edge: DockEdge } => {
+      const vp = viewport();
       const box = apiRef.current.motion.box() ?? { x: 0, y: 0 };
       const cx = box.x + vp.half.w;
       const cy = box.y + vp.half.h;
       const d = { bottom: vp.height - cy, left: cx, right: vp.width - cx, top: cy };
-      return (Object.keys(d) as DockEdge[]).reduce((best, k) => (d[k] < d[best] ? k : best), 'right' as DockEdge);
+      const edges = Object.keys(d) as DockEdge[];
+      const edge = edges.reduce((best, k) => (d[k] < d[best] ? k : best), 'right' as DockEdge);
+      return { distance: d[edge], edge };
     };
 
-    /** 「只露一小截」的盒子：沿该边挂出去，其余轴保持原值。 */
+    /** 「挂在边上」的盒子。 */
     const edgeBox = (edge: DockEdge): { x: number; y: number } => {
       const vp = viewport();
       const cur = apiRef.current.motion.box() ?? { x: 0, y: 0 };
@@ -146,41 +126,30 @@ export function createCardDock(rt: DockRuntime) {
       }
     };
 
-    /** 探头：往屏幕里挪一点 + 播该边的探头动作，稍后缩回去。 */
+    /** 播放某条边的探头动作（循环，配置里没有就静着）。 */
     const peek = (edge: DockEdge): void => {
       const api = apiRef.current;
       const anim = PEEK_ANIM[edge];
-      const pools = api.cfgRef.current.animations;
-      const known = Object.values(pools).some((pool) => Array.isArray(pool) && pool.includes(anim));
-      const box = api.motion.box();
-      if (box === null) return;
-      const vp = viewport();
-      const dx = edge === 'left' ? PEEK_SHIFT : edge === 'right' ? -PEEK_SHIFT : 0;
-      const dy = edge === 'top' ? PEEK_SHIFT : edge === 'bottom' ? -PEEK_SHIFT : 0;
-      api.motion.setBox({ x: box.x + dx, y: box.y + dy });
-      api.setCustomPos(boxToRatio({ x: box.x + dx, y: box.y + dy }, vp, vp.half));
-      if (peekBackTimerRef.current !== null) clearTimeout(peekBackTimerRef.current);
-      peekBackTimerRef.current = setTimeout(() => {
-        const now = apiRef.current.motion.box();
-        if (now === null || dockedRef.current === null) return;
-        apiRef.current.motion.setBox({ x: now.x - dx, y: now.y - dy });
-        apiRef.current.setCustomPos(boxToRatio({ x: now.x - dx, y: now.y - dy }, vp, vp.half));
-      }, PEEK_HOLD_MS);
+      const pools = api.cfgRef.current.animations as Record<string, unknown>;
+      const peekPool = pools.peek;
+      const known =
+        (Array.isArray(peekPool) && peekPool.includes(anim)) ||
+        Object.values(pools).some((pool) => Array.isArray(pool) && pool.includes(anim));
       if (!known) return;
-      api.setOnce(true);
+      api.setOnce(false);
       api.setAnim(anim);
       api.card.actions.bumpSeq();
     };
 
-    /** 贴到最近的边上，并开始周期性探头。 */
-    const dock = (): void => {
+    /** 扒到指定的边上。 */
+    const dock = (edge: DockEdge): void => {
       const api = apiRef.current;
       if (dockedRef.current !== null) return;
+      if (api.live.current.flow?.sleeping() === true) return;
       const vp = viewport();
       const box = api.motion.box();
       if (box === null) return;
       const back = boxToRatio(box, vp, vp.half);
-      const edge = nearestEdge(vp);
       const target = clampReachableBox(edgeBox(edge), vp, {
         bottomPad: api.metrics.bottomPad,
         size: api.metrics.size,
@@ -191,15 +160,10 @@ export function createCardDock(rt: DockRuntime) {
       api.setCustomPos(boxToRatio(target, vp, vp.half));
       dockedRef.current = { back, edge };
       peek(edge);
-      peekTimerRef.current = setInterval(() => {
-        const state = dockedRef.current;
-        if (state === null) return;
-        if (canDock()) peek(state.edge);
-      }, PEEK_MS);
     };
 
-    /** 收回来。 */
-    const undock = (): void => {
+    /** 从边上下来，回到扒上去之前的位置。 */
+    const wake = (): void => {
       const state = dockedRef.current;
       if (state === null) return;
       clearTimers();
@@ -207,32 +171,17 @@ export function createCardDock(rt: DockRuntime) {
       apiRef.current.setCustomPos(state.back);
     };
 
-    /** 重排静置计时；已经收起时不重排。 */
-    const reset = (): void => {
-      clearTimers();
-      if (dockedRef.current !== null) return;
-      idleTimerRef.current = setTimeout(() => {
-        if (canDock()) dock();
-        else {
-          idleTimerRef.current = null;
-          reset();
-        }
-      }, IDLE_MS);
-    };
-
-    // 只在挂载时排一次，卸载清干净。
-    useEffect(() => {
-      reset();
-      return () => clearTimers();
-      // eslint-disable-next-line react-hooks/exhaustive-deps -- reset/clearTimers 只读 ref
-    }, []);
+    // 卡片卸载时把计时器清干净。
+    useEffect(() => () => clearTimers(), []);
 
     return {
-      reset,
-      wake: () => {
-        undock();
-        reset();
+      docked: () => dockedRef.current !== null,
+      settle: () => {
+        if (dockedRef.current !== null) return;
+        const { distance, edge } = nearestEdge();
+        if (distance <= TRIGGER_PX) dock(edge);
       },
+      wake,
     };
   };
 }

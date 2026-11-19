@@ -9867,6 +9867,24 @@ function createMenuActions(deps) {
 			fireAction(ROUTE_PATH + "/balance?pet=" + encodeURIComponent(petId) + "&surface=any", "余额刷新动作");
 			return;
 		}
+		if (leaf$1.action === "check-update") {
+			console.info("[puppy] 菜单检查更新 pet=" + petId);
+			fetch(ROUTE_PATH + "/update/check?pet=" + encodeURIComponent(petId), {
+				body: "{}",
+				method: "POST"
+			}).then((r) => r.json()).then((d) => {
+				if (d.error) {
+					deps.say?.("检查更新失败：" + d.error);
+					return;
+				}
+				if (!d.latest || d.latest === d.current) {
+					deps.say?.("已经是最新的啦（v" + (d.current || "?") + "）");
+					return;
+				}
+				deps.say?.("妈妈，有新版本 v" + d.latest + "，我现在是 v" + (d.current || "?") + "，刷新后重装就能升级～");
+			}).catch(() => deps.say?.("检查更新失败，待会儿再试试"));
+			return;
+		}
 		if (leaf$1.action === "show-environment") {
 			console.info("[puppy] 菜单查询天气 pet=" + petId);
 			fireAction(ROUTE_PATH + "/environment?pet=" + encodeURIComponent(petId) + "&surface=any&fresh=1", "天气查询动作");
@@ -12917,6 +12935,10 @@ function createCardEntry(rt) {
 					action: "show-balance"
 				},
 				{
+					label: "检查更新",
+					action: "check-update"
+				},
+				{
 					label: "查询天气",
 					action: "show-environment"
 				},
@@ -14361,8 +14383,6 @@ function createCardRuntime(rt) {
 		const dock = useCardDock({
 			card,
 			cfgRef,
-			isBusy: () => drag.isActive() || drag.justDragged(),
-			isHovered: () => entryRef.current?.isHovered() ?? false,
 			live: liveRef,
 			metrics: {
 				bottomPad,
@@ -14478,16 +14498,21 @@ function createCardRuntime(rt) {
 			},
 			onContextMenu: entry.handleContextMenu,
 			onPointerDown: (e) => {
-				dock.wake();
+				if (dock.docked()) {
+					dock.wake();
+					return;
+				}
 				drag.onPointerDown(e);
 			},
 			onPointerEnter: (e) => {
-				dock.wake();
 				entry.onPointerEnter(e);
 			},
 			onPointerLeave: entry.onPointerLeave,
 			onPointerMove: drag.onPointerMove,
-			onPointerUp: drag.onPointerUp,
+			onPointerUp: (e) => {
+				drag.onPointerUp(e);
+				dock.settle();
+			},
 			rootRef,
 			rootStyle,
 			size,

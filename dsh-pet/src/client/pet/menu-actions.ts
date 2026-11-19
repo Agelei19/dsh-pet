@@ -146,6 +146,25 @@ export function createMenuActions(deps: MenuActionDeps): MenuActions {
       fireAction(ROUTE_PATH + '/balance?pet=' + encodeURIComponent(petId) + '&surface=any', '余额刷新动作');
       return;
     }
+    if (leaf.action === 'check-update') {
+      // 手动查一次：结果直接说出来，不依赖 toast（toast 只在定时检查时发）。
+      console.info('[puppy] 菜单检查更新 pet=' + petId);
+      fetch(ROUTE_PATH + '/update/check?pet=' + encodeURIComponent(petId), { body: '{}', method: 'POST' })
+        .then((r) => r.json())
+        .then((d: { current?: string; latest?: string; error?: string }) => {
+          if (d.error) {
+            deps.say?.('检查更新失败：' + d.error);
+            return;
+          }
+          if (!d.latest || d.latest === d.current) {
+            deps.say?.('已经是最新的啦（v' + (d.current || '?') + '）');
+            return;
+          }
+          deps.say?.('妈妈，有新版本 v' + d.latest + '，我现在是 v' + (d.current || '?') + '，刷新后重装就能升级～');
+        })
+        .catch(() => deps.say?.('检查更新失败，待会儿再试试'));
+      return;
+    }
     if (leaf.action === 'show-environment') {
       // 与余额同一套：宿主强制刷新并写 sections.env，气泡由 /state 驱动。
       // surface=any：点菜单的这一端不一定就是渲染端，宿主只按 petId 记给气泡。

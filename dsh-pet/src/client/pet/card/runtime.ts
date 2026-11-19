@@ -196,12 +196,10 @@ export function createCardRuntime(rt: PetRuntime) {
     });
     entryRef.current = entry;
 
-    // 贴边收起：静置 30 秒自己去最近的边挂住，隔 11 秒探头一次；指针进来立刻收回。
+    // 贴边探头：拖到边缘附近松手就扒上去，点一下或拖走就下来。
     const dock = useCardDock({
       card,
       cfgRef,
-      isBusy: () => drag.isActive() || drag.justDragged(),
-      isHovered: () => entryRef.current?.isHovered() ?? false,
       live: liveRef,
       metrics: { bottomPad, halfH, halfW, size },
       motion,
@@ -335,16 +333,22 @@ export function createCardRuntime(rt: PetRuntime) {
       },
       onContextMenu: entry.handleContextMenu,
       onPointerDown: (e) => {
-        dock.wake();
+        // 扒在边上时按下去先下来，这一下不进入拖拽（否则会从半只露在屏外的地方拖起）。
+        if (dock.docked()) {
+          dock.wake();
+          return;
+        }
         drag.onPointerDown(e);
       },
       onPointerEnter: (e) => {
-        dock.wake();
         entry.onPointerEnter(e);
       },
       onPointerLeave: entry.onPointerLeave,
       onPointerMove: drag.onPointerMove,
-      onPointerUp: drag.onPointerUp,
+      onPointerUp: (e) => {
+        drag.onPointerUp(e);
+        dock.settle();
+      },
       rootRef,
       rootStyle,
       size,

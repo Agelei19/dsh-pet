@@ -19,6 +19,7 @@ export interface MenuLeaf {
   action?:
     | 'open-site'
     | 'show-balance'
+    | 'check-update'
     | 'show-environment'
     | 'whisper'
     | 'chat'

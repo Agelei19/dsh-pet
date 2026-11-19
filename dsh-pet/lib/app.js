@@ -1,5 +1,6 @@
 import { __commonJS, __export, __toESM } from "./chunk-BI7llAj_.js";
-import { APIConnectionError, APIConnectionTimeoutError, APIError, APIUserAbortError, AnthropicError, AuthenticationError, BadRequestError, ConflictError, InternalServerError, NotFoundError, PermissionDeniedError, RateLimitError, RetryableError, ToolError, UnprocessableEntityError, __classPrivateFieldGet, __classPrivateFieldSet, applyJitter, backoff, castToError, checkMemorySyncInterval, checkNever, concatBytes, debugLogRequestDetails, decodeUTF8, defaultLogLevel, defaultLogger, encodeUTF8, isAbortError, isAbsoluteURL, isArray, isEmptyObj, isFatal4xx, isObj, isReadonlyArray, isStatus, jitter, loggerFor, maybeObj, parseLogLevel, promiseWithResolvers, readEnv, safeJSON, validatePositiveInteger } from "./promise-DLDcTBDg.js";
+import { PACKAGE_MEMES_DIR, PACKAGE_ROOT, checkUpdate, fetchJson } from "./update-check-C8OnnVCW.js";
+import { APIConnectionError, APIConnectionTimeoutError, APIError, APIUserAbortError, AnthropicError, AuthenticationError, BadRequestError, ConflictError, InternalServerError, NotFoundError, PermissionDeniedError, RateLimitError, RetryableError, ToolError, UnprocessableEntityError, __classPrivateFieldGet, __classPrivateFieldSet, applyJitter, backoff, castToError, checkMemorySyncInterval, checkNever, concatBytes, debugLogRequestDetails, decodeUTF8, defaultLogLevel, defaultLogger, encodeUTF8, isAbortError, isAbsoluteURL, isArray, isEmptyObj, isFatal4xx, isObj, isReadonlyArray, isStatus, jitter, loggerFor, maybeObj, parseLogLevel, promiseWithResolvers, readEnv, safeJSON, validatePositiveInteger } from "./promise-CXLdWhDY.js";
 import { createRequire } from "node:module";
 import { dirname, join, normalize, resolve, sep } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -971,12 +972,6 @@ function removeRoundsByTs(messages, ts) {
 }
 
 //#endregion
-//#region src/host/paths.ts
-const PACKAGE_ROOT = resolve(fileURLToPath(new URL("..", import.meta.url)));
-const PACKAGE_ROOT_ASSETS = join(PACKAGE_ROOT, "assets");
-const PACKAGE_MEMES_DIR = join(PACKAGE_ROOT_ASSETS, "memes");
-
-//#endregion
 //#region src/host/helper/electron.ts
 const packageRoot$1 = PACKAGE_ROOT;
 const defaultHelperMain = resolve(packageRoot$1, "runtime", "electron-helper", "main.js");
@@ -1467,9 +1462,9 @@ var HelperProcess = class {
 /** 单次抓取超时（ms）。 */
 const FETCH_TIMEOUT_MS = 2e4;
 /** 单次抓取失败后的重试次数（间隔 0.8s）。 */
-const RETRIES$1 = 3;
+const RETRIES = 3;
 /** 发起一次带超时的 fetch；失败抛错，是否重试由调用方决定。 */
-async function fetchOnce$1(url, key) {
+async function fetchOnce(url, key) {
 	return fetch(url, {
 		headers: {
 			Authorization: "Bearer " + key,
@@ -1480,11 +1475,11 @@ async function fetchOnce$1(url, key) {
 }
 async function fetchWithRetry(url, key) {
 	let last;
-	for (let i = 0; i <= RETRIES$1; i++) try {
-		return await fetchOnce$1(url, key);
+	for (let i = 0; i <= RETRIES; i++) try {
+		return await fetchOnce(url, key);
 	} catch (e) {
 		last = e;
-		if (i < RETRIES$1) await new Promise((r) => setTimeout(r, 800));
+		if (i < RETRIES) await new Promise((r) => setTimeout(r, 800));
 	}
 	throw last instanceof Error ? last : new Error(String(last));
 }
@@ -3043,74 +3038,6 @@ function createHostSetup(ctx) {
 		EXTERNAL_WORK_SESSION,
 		nextExternalWorkSeq
 	};
-}
-
-//#endregion
-//#region src/host/fetch-json.ts
-/**
-* 出站 JSON GET 的唯一入口：带超时与一次重试，非 2xx 与解析失败一律抛错。
-*
-* 天气与定位共用这里；余额那份自带 Bearer 头，不强行合并。
-* 始终成立：成功时返回已解析的 JSON 值；错误文案只带端点名与状态码，不带完整 URL 与响应体。
-* @module dsh-pet/src/host/fetch-json
-*/
-/** 单次请求超时（ms）：境外接口冷启动实测 3~6s，留足余量。 */
-const TIMEOUT_MS$2 = 15e3;
-/** 失败重试次数：只补一次网络抖动，再多会把一次查询拖到半分钟。 */
-const RETRIES = 1;
-/** 重试前的等待（ms）。 */
-const RETRY_DELAY_MS = 400;
-var FetchJsonError = class extends Error {
-	/**
-	* @param code - 失败分类。
-	* @param message - 给日志与用户看的一句话，不得含查询参数与响应体。
-	* @param cause - 原始异常，便于排查。
-	*/
-	constructor(code, message, cause) {
-		super(message, { cause });
-		this.name = "FetchJsonError";
-		this.code = code;
-	}
-};
-async function fetchJson(url, options) {
-	const fetchImpl = options.fetchImpl ?? fetch;
-	const sleep$2 = options.sleep ?? delayOf;
-	const timeoutMs = options.timeoutMs ?? TIMEOUT_MS$2;
-	let last;
-	for (let attempt = 0; attempt <= RETRIES; attempt++) try {
-		return await fetchOnce(fetchImpl, url, timeoutMs, options.label);
-	} catch (e) {
-		last = e instanceof FetchJsonError ? e : new FetchJsonError("network", options.label + " 请求失败", e);
-		if (last.code !== "timeout" && last.code !== "network" || attempt === RETRIES) break;
-		await sleep$2(RETRY_DELAY_MS);
-	}
-	throw last ?? new FetchJsonError("network", options.label + " 请求失败");
-}
-/** 单次抓取：区分超时、状态码、JSON 语法与传输错误。 */
-async function fetchOnce(fetchImpl, url, timeoutMs, label) {
-	const signal = AbortSignal.timeout(timeoutMs);
-	let response;
-	try {
-		response = await fetchImpl(url, {
-			signal,
-			headers: { "user-agent": "dsh-pet" }
-		});
-	} catch (e) {
-		const timedOut = signal.aborted || e instanceof Error && e.name === "TimeoutError";
-		throw new FetchJsonError(timedOut ? "timeout" : "network", label + (timedOut ? " 请求超时" : " 请求失败"), e);
-	}
-	if (!response.ok) throw new FetchJsonError("http-status", label + " 返回 HTTP " + response.status);
-	try {
-		return await response.json();
-	} catch (e) {
-		if (signal.aborted || e instanceof Error && e.name === "TimeoutError") throw new FetchJsonError("timeout", label + " 请求超时", e);
-		if (e instanceof SyntaxError) throw new FetchJsonError("bad-json", label + " 返回的不是 JSON", e);
-		throw new FetchJsonError("network", label + " 响应读取失败", e);
-	}
-}
-/** 缺省等待实现。 */
-function delayOf(ms) {
-	return new Promise((resolve$1) => setTimeout(resolve$1, ms));
 }
 
 //#endregion
@@ -5163,6 +5090,29 @@ function decideBubbleClear(args) {
 async function handleInteractionRoutes(deps, input) {
 	const { configPaths, lock, lockBlocked, memeDirsFor, publishWhisper, requirePet, sleep: sleep$2, state: state$1, surfaceBlocked } = deps;
 	const { body, method, rest, url } = input;
+	if (rest === "update/check") {
+		if (method !== "POST") return methodNotAllowed();
+		try {
+			const { checkUpdate: checkUpdate$1 } = await import("./update-check-BuaYkwg7.js");
+			const info = await checkUpdate$1();
+			if (info === null) return okResult({
+				ok: true,
+				latest: "",
+				current: ""
+			});
+			return okResult({
+				current: info.current,
+				latest: info.latest,
+				ok: true,
+				url: info.url
+			});
+		} catch (e) {
+			return okResult({
+				error: e instanceof Error ? e.message : String(e),
+				ok: true
+			});
+		}
+	}
 	if (rest === "lock" || rest === "lock/release") {
 		const isRelease = rest === "lock/release";
 		if (method !== "POST") return methodNotAllowed();
@@ -6593,62 +6543,6 @@ function shouldSleepTalk(pet) {
 function sleepTalkPeriodSec(conf) {
 	const table = conf.eventsRefreshSec;
 	return clampPeriodSec(table?.sleepTalk, SLEEP_TALK_DEFAULT_SEC);
-}
-
-//#endregion
-//#region src/host/update-check.ts
-const DEFAULT_INDEX_URL = "https://raw.githubusercontent.com/Agelei19/dsh-pet-puppy/puppy/market/index.json";
-/** 本仓库在索引里的插件名。 */
-const PLUGIN_NAME = "puppy";
-function readLocalVersion() {
-	try {
-		const raw = readFileSync(join(PACKAGE_ROOT, "package.json"), "utf8");
-		const pkg = JSON.parse(raw);
-		return typeof pkg.version === "string" && pkg.version ? pkg.version : "0.0.0";
-	} catch {
-		return "0.0.0";
-	}
-}
-function compareVersions(a, b) {
-	const parse$2 = (v) => v.split("-")[0].split(".").map((part) => {
-		const n = Number.parseInt(part, 10);
-		return Number.isFinite(n) ? n : 0;
-	});
-	const left = parse$2(a);
-	const right = parse$2(b);
-	for (let i = 0; i < Math.max(left.length, right.length); i += 1) {
-		const d = (left[i] ?? 0) - (right[i] ?? 0);
-		if (d !== 0) return d;
-	}
-	return 0;
-}
-function latestVersionOf(index) {
-	const plugins = index?.plugins;
-	if (!Array.isArray(plugins)) return null;
-	const entry = plugins.find((p) => p && p.name === PLUGIN_NAME) ?? null;
-	if (!entry || !Array.isArray(entry.versions)) return null;
-	const versions = entry.versions.map((v) => v && typeof v.version === "string" ? v.version : "").filter((v) => v !== "");
-	if (versions.length === 0) return null;
-	return versions.reduce((best, v) => compareVersions(v, best) > 0 ? v : best, versions[0]);
-}
-async function checkUpdate(options = {}) {
-	const indexUrl = options.indexUrl ?? DEFAULT_INDEX_URL;
-	const current = options.current ?? readLocalVersion();
-	try {
-		const index = await fetchJson(indexUrl, {
-			label: "plugin-index",
-			fetchImpl: options.fetchImpl
-		});
-		const latest = latestVersionOf(index);
-		if (latest === null || compareVersions(latest, current) <= 0) return null;
-		return {
-			current,
-			latest,
-			url: "https://github.com/Agelei19/dsh-pet-puppy"
-		};
-	} catch {
-		return null;
-	}
 }
 
 //#endregion
@@ -10446,7 +10340,7 @@ var VoiceSynthError = class extends Error {
 };
 async function synthesize({ signal, text, voice, rate }) {
 	try {
-		const mod = await import("./dist-jfwKn6uQ.js");
+		const mod = await import("./dist-V7StWbUn.js");
 		const EdgeTTS = mod.EdgeTTS ?? mod.default?.EdgeTTS;
 		if (!EdgeTTS) throw new VoiceSynthError("依赖未导出 EdgeTTS");
 		const tts = new EdgeTTS();
@@ -41712,7 +41606,7 @@ function redactSensitive(body) {
 }
 async function checkCredentialsFileSafety(path$2, onWarn = (m) => console.warn(`anthropic-sdk: ${m}`)) {
 	if (typeof process === "undefined" || process.platform === "win32") return;
-	const { fs } = await import("./node-y67FhQSo.js");
+	const { fs } = await import("./node-C_AUaHjX.js");
 	let resolved = path$2;
 	let st;
 	try {
@@ -41727,7 +41621,7 @@ async function checkCredentialsFileSafety(path$2, onWarn = (m) => console.warn(`
 	if (typeof process.getuid === "function" && st.uid !== process.getuid()) onWarn(`credentials file at ${resolved} is owned by uid ${st.uid} (current process uid ${process.getuid()}); verify this is intentional.`);
 }
 async function writeCredentialsFileAtomic(targetPath, data) {
-	const { fs, path: path$2 } = await import("./node-y67FhQSo.js");
+	const { fs, path: path$2 } = await import("./node-C_AUaHjX.js");
 	const dir = path$2.dirname(targetPath);
 	await fs.promises.mkdir(dir, {
 		recursive: true,
@@ -42641,7 +42535,7 @@ const loadConfigWithSource = async (profile) => {
 	const profileName = profile ?? await getActiveProfileName();
 	if (profileName === null) return null;
 	validateProfileName(profileName);
-	const { fs, path: path$2 } = await import("./node-y67FhQSo.js");
+	const { fs, path: path$2 } = await import("./node-C_AUaHjX.js");
 	const configPath$1 = path$2.join(rootConfigPath, "configs", `${profileName}.json`);
 	let configRaw;
 	try {
@@ -42710,12 +42604,12 @@ const getCredentialsPath = async (config$1, profile) => {
 	const profileName = profile ?? await getActiveProfileName();
 	if (!profileName) return null;
 	validateProfileName(profileName);
-	const { path: path$2 } = await import("./node-y67FhQSo.js");
+	const { path: path$2 } = await import("./node-C_AUaHjX.js");
 	return path$2.join(rootConfigPath, "credentials", `${profileName}.json`);
 };
 const getRootConfigPath = async () => {
 	if (!supportsLocalConfigFiles()) return null;
-	const { path: path$2 } = await import("./node-y67FhQSo.js");
+	const { path: path$2 } = await import("./node-C_AUaHjX.js");
 	const configDir = readEnv("ANTHROPIC_CONFIG_DIR");
 	if (configDir) return configDir;
 	const os = getPlatformHeaders()["X-Stainless-OS"];
@@ -42741,7 +42635,7 @@ const getActiveProfileName = async () => {
 	if (!rootConfigPath) return null;
 	const profileName = readEnv("ANTHROPIC_PROFILE");
 	if (profileName) return profileName;
-	const { fs, path: path$2 } = await import("./node-y67FhQSo.js");
+	const { fs, path: path$2 } = await import("./node-C_AUaHjX.js");
 	const filePath = path$2.join(rootConfigPath, "active_config");
 	try {
 		return (await fs.promises.readFile(filePath, "utf-8")).trim() || "default";
@@ -42756,7 +42650,7 @@ const getActiveProfileName = async () => {
 function identityTokenFromFile(path$2) {
 	if (!path$2) throw new AnthropicError("Identity token file path is empty");
 	return async () => {
-		const { fs } = await import("./node-y67FhQSo.js");
+		const { fs } = await import("./node-C_AUaHjX.js");
 		let content;
 		try {
 			content = await fs.promises.readFile(path$2, "utf-8");
@@ -42829,7 +42723,7 @@ function oidcFederationProvider(config$1) {
 //#region node_modules/.pnpm/@anthropic-ai+sdk@0.135.0_zod@4.6.7/node_modules/@anthropic-ai/sdk/lib/credentials/user-oauth.mjs
 function userOAuthProvider(config$1) {
 	return async (opts) => {
-		const { fs } = await import("./node-y67FhQSo.js");
+		const { fs } = await import("./node-C_AUaHjX.js");
 		await checkCredentialsFileSafety(config$1.credentialsPath, config$1.onSafetyWarning);
 		let raw;
 		try {
@@ -42997,7 +42891,7 @@ function resolveIdentityTokenProvider(auth) {
 */
 function cachedExchangeProvider(exchange, credentialsPath, onCacheWriteError, onSafetyWarning) {
 	return async (opts) => {
-		const { fs } = await import("./node-y67FhQSo.js");
+		const { fs } = await import("./node-C_AUaHjX.js");
 		await checkCredentialsFileSafety(credentialsPath, onSafetyWarning);
 		let existing;
 		try {
@@ -47728,7 +47622,7 @@ var EnvironmentWorker = /* @__PURE__ */ (() => {
 		const ctrl = new AbortController();
 		const detachExternal = linkAbort(externalSignal, ctrl);
 		const lease = new Lease(ctrl);
-		const agentToolset = await import("./node-BUxc_9IN.js");
+		const agentToolset = await import("./node-B5RCNY2s.js");
 		let leaseTtlMs;
 		let runner;
 		const heartbeatPromise = heartbeatLoop(sessionClient, work, lease, log$1, this.requestOptions, (ttlMs) => {
