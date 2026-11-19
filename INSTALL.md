@@ -11,12 +11,20 @@
 在 DSH 对话框里发：
 
 ```
-帮我把小狗桌宠装上：git clone https://github.com/Agelei19/dsh-pet 后，跑 node dsh-pet/scripts/install-puppy.mjs --profile desktop
+帮我安装 https://github.com/Agelei19/dsh-pet-puppy 这个仓库里的桌宠插件 puppy，装到 desktop profile
 ```
 
-DSH 会自己 clone、把插件写进 profile 的 `package.json` 与 `bundles`、在 `node_modules` 建指向仓库的 junction，然后提醒你重启。`lib/` 已随仓库提供，不需要构建。
+AI 照做的三步：
 
-`--profile` 按你在用的界面填：`dsh web` → `web`，桌面应用 → `desktop`。
+```bash
+git clone --depth 1 -b puppy https://github.com/Agelei19/dsh-pet-puppy
+node dsh-pet-puppy/dsh-pet/scripts/install-puppy.mjs --profile desktop
+# 重启 DSH
+```
+
+脚本会备份 profile 的 `package.json`、写依赖与 `dsh.profile.bundles`、在 `node_modules` 建指向仓库的链接（Windows 用 junction，不复制整包）。`--profile` 按你在用的界面填：`dsh web` → `web`，桌面应用 → `desktop`；先加 `--dry-run` 可以只看它要改什么。
+
+`lib/` 已随仓库提供，不需要构建。
 
 ## 前置要求
 
@@ -36,7 +44,7 @@ dsh --version   # 验证 dsh 命令可用
 打开「插件 → 插件市场 → 索引源 → 添加」，填入本仓库的索引地址：
 
 ```
-https://raw.githubusercontent.com/Agelei19/dsh-pet/puppy/market/index.json
+https://raw.githubusercontent.com/Agelei19/dsh-pet-puppy/puppy/market/index.json
 ```
 
 之后在插件市场里点 `puppy` 安装即可。索引格式见 [market/README.md](market/README.md)。
@@ -65,7 +73,7 @@ dsh plugin --profile desktop add dsh-pet
 `lib/` 已入库，clone 完直接装：
 
 ```sh
-git clone https://github.com/Agelei19/dsh-pet.git
+git clone https://github.com/Agelei19/dsh-pet-puppy.git
 cd dsh-pet
 node scripts/install-puppy.mjs --profile desktop   # dsh web 用 --profile web
 ```

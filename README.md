@@ -17,7 +17,7 @@
 在 DSH 里打开「插件 → 插件市场 → 索引源 → 添加」，填入：
 
 ```
-https://raw.githubusercontent.com/Agelei19/dsh-pet/puppy/market/index.json
+https://raw.githubusercontent.com/Agelei19/dsh-pet-puppy/puppy/market/index.json
 ```
 
 索引里的安装源固定到某个 commit（`git+https://…#<commit>&path:/dsh-pet`），所以别人装到的是这个仓库当时的快照。
@@ -25,13 +25,21 @@ https://raw.githubusercontent.com/Agelei19/dsh-pet/puppy/market/index.json
 
 ## 说一句话就装好
 
-在 DSH 的对话框里发这一句，剩下的它会自己做（克隆仓库 → 装进 profile → 提示你重启）：
+在 DSH 的对话框里把下面这句发给 AI，剩下的它自己做：
 
 ```
-帮我把小狗桌宠装上：git clone https://github.com/Agelei19/dsh-pet 后，跑 node dsh-pet/scripts/install-puppy.mjs --profile desktop
+帮我安装 https://github.com/Agelei19/dsh-pet-puppy 这个仓库里的桌宠插件 puppy，装到 desktop profile
 ```
 
-装完重启 DSH 就能看到。`lib/` 已随仓库提供，**不需要先构建**。
+它要做的事只有三步（`lib/` 已随仓库提供，**不需要构建**）：
+
+```bash
+git clone --depth 1 -b puppy https://github.com/Agelei19/dsh-pet-puppy
+node dsh-pet-puppy/dsh-pet/scripts/install-puppy.mjs --profile desktop
+# 然后重启一次 DSH
+```
+
+`install-puppy.mjs` 会备份 profile 的 `package.json`、把插件写进依赖与 `dsh.profile.bundles`、在 `node_modules` 下建好链接（Windows 用 junction，避免整包复制）。加 `--dry-run` 只打印不落盘，`--profile` 换成你在用的 profile（`dsh web` 是 `web`，桌面应用是 `desktop`）。
 
 ## 快速开始（安装插件）
 
@@ -165,7 +173,7 @@ AI 提示词 → 绿幕视频 → 透明动画 → 插件，换角色、换动�
 
 ## 💬 反馈与发版节奏
 
-欢迎提 [issue](https://github.com/Agelei19/dsh-pet/issues) 与 PR——bug、体验问题随时反馈。**新功能请先开 issue** 说明使用场景，确认后再动手，不要在确认前直接提交实现 PR。这个插件专注桌宠与 DSH 本身，偏离太远的需求一般不会做。动手前也请先翻一眼 [提交记录](https://github.com/Agelei19/dsh-pet/commits/puppy)，确认不是已经修掉的同款问题（有些问题可能已经在 `main` 上修好了，只是还没发版）。
+欢迎提 [issue](https://github.com/Agelei19/dsh-pet-puppy/issues) 与 PR——bug、体验问题随时反馈。**新功能请先开 issue** 说明使用场景，确认后再动手，不要在确认前直接提交实现 PR。这个插件专注桌宠与 DSH 本身，偏离太远的需求一般不会做。动手前也请先翻一眼 [提交记录](https://github.com/Agelei19/dsh-pet-puppy/commits/puppy)，确认不是已经修掉的同款问题（有些问题可能已经在 `main` 上修好了，只是还没发版）。
 
 - **小修不单独发版**：不影响使用的小 bug 与优化会**累计**到下一个版本一起发，避免版本更迭过于频繁。所以「`main` 上已经修了」不等于「你装的这版已经包含」——`latest` 没更新时，以 `main` 的提交记录为准。
 - **想立刻用上未发布的修复**：按 [INSTALL.md](INSTALL.md) 的「从源码安装」把插件指向本地仓库即可；注意**宿主半侧**的代码改动要**重开 DSH** 才生效（浏览器半侧刷新页面即可）。

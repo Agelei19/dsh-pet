@@ -33,8 +33,8 @@ def build(commit, version, ts=None):
                 },
                 'icon': 'icon.png',
                 'author': 'Agelei19',
-                'homepage': 'https://github.com/Agelei19/dsh-pet',
-                'repository': {'url': 'https://github.com/Agelei19/dsh-pet', 'directory': 'dsh-pet'},
+                'homepage': 'https://github.com/Agelei19/dsh-pet-puppy',
+                'repository': {'url': 'https://github.com/Agelei19/dsh-pet-puppy', 'directory': 'dsh-pet'},
                 'metadata': {'category': 'pets', 'keywords': ['desktop pet', 'puppy', '桌宠', '小狗'],
                              'labels': ['zh']},
                 'versions': [
@@ -43,7 +43,7 @@ def build(commit, version, ts=None):
                         'publishTimestamp': ts,
                         'source': {
                             'type': 'git',
-                            'url': 'https://github.com/Agelei19/dsh-pet',
+                            'url': 'https://github.com/Agelei19/dsh-pet-puppy',
                             'commit': commit,
                             'path': 'dsh-pet',
                         },
