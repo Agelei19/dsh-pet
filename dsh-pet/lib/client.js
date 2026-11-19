@@ -14508,7 +14508,14 @@ function createCardRuntime(rt) {
 				entry.onPointerEnter(e);
 			},
 			onPointerLeave: entry.onPointerLeave,
-			onPointerMove: drag.onPointerMove,
+			onPointerMove: (e) => {
+				drag.onPointerMove(e);
+				if (dock.docked()) return;
+				const edge = dock.hover(e);
+				if (edge === null) return;
+				drag.onPointerUp(e);
+				dock.force(edge);
+			},
 			onPointerUp: (e) => {
 				drag.onPointerUp(e);
 				dock.settle();
