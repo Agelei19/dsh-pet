@@ -97,18 +97,18 @@ describe('currentTaskFromTodo —— 任务详情文案（issue #59）', () => {
   test('单个 in_progress → 它的文案', () => {
     assert.equal(
       currentTaskFromTodo(todo(['completed', '第一步'], ['in_progress', '正在执行 phase1'])),
-      '正在执行 phase1',
+      '2/2 正在执行 phase1',
     );
   });
 
   test('多个 in_progress → 取**最后一个**（最近开始的那步）', () => {
     // 成因：agent 把新步骤标 in_progress 却忘了收上一步；取第一个就会永远停在最早那步
     const event = todo(['in_progress', '正在执行 phase1'], ['in_progress', '正在执行 phase2']);
-    assert.equal(currentTaskFromTodo(event), '正在执行 phase2');
+    assert.equal(currentTaskFromTodo(event), '2/2 正在执行 phase2');
   });
 
   test('无 in_progress → 回落到第一个 pending；都没有 → null', () => {
-    assert.equal(currentTaskFromTodo(todo(['completed', 'a'], ['pending', 'b'], ['pending', 'c'])), 'b');
+    assert.equal(currentTaskFromTodo(todo(['completed', 'a'], ['pending', 'b'], ['pending', 'c'])), '2/3 b');
     assert.equal(currentTaskFromTodo(todo(['completed', 'a'], ['completed', 'b'])), null);
     assert.equal(currentTaskFromTodo(todo()), null);
   });

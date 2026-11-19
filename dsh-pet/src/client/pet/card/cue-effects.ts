@@ -49,6 +49,13 @@ export function createCueEffects(rt: CueEffectsRuntime) {
     const prevNoticeRef = useRef(0);
     const prevEnvRef = useRef(0);
     const prevWorkRef = useRef(0);
+    // 工作状态「进度播报」定时器：干活期间每隔一会儿把气泡换成新的一句话（任务进度与档位台词轮换），
+    // 让桌面上的宠物一直能说明当前在做什么，而不是只显示事件发生那一刻的文案。
+    const workChatterRef = useRef<number | null>(null);
+    const workChatterTurnRef = useRef(0);
+    // 播报用的最新文案：定时器启动后任务详情还会变（todo/write），闭包里读 ref 才能跟上。
+    const workTaskRef = useRef<string | null>(null);
+    const workLinesRef = useRef<string[]>([]);
     // 调试日志：上一档位，null 表示空闲，undefined 表示启动后尚未触发。
     const prevWorkStateRef = useRef<string | null | undefined>(undefined);
     const prevSayRef = useRef(0);
@@ -122,6 +129,42 @@ export function createCueEffects(rt: CueEffectsRuntime) {
       hub.bubbles.showEnv();
     };
 
+    /** 停掉进度播报定时器（空闲、睡觉、终态都要停）。 */
+    const stopWorkChatter = (): void => {
+      if (workChatterRef.current !== null) {
+        window.clearInterval(workChatterRef.current);
+        workChatterRef.current = null;
+      }
+    };
+
+    /**
+     * 开一个进度播报定时器：每隔 CHATTER_MS 换一句气泡文案，任务详情与档位台词交替出现。
+     * 任务详情是「第几步/共几步 + 在做什么」，比档位台词有信息量，所以占多数轮次；
+     * 台词轮次让宠物保持「在说话」的感觉。睡眠和终态由调用方 stop。
+     */
+    const startWorkChatter = (task: string | null, lines: string[] | undefined): void => {
+      workTaskRef.current = task;
+      workLinesRef.current = Array.isArray(lines) ? lines : [];
+      if (workChatterRef.current !== null) return; // 已在跑：文案从 ref 读，不重启定时器
+      workChatterRef.current = window.setInterval(() => {
+        if (hub.sleeping()) {
+          stopWorkChatter();
+          return;
+        }
+        workChatterTurnRef.current += 1;
+        const turn = workChatterTurnRef.current;
+        const current = workTaskRef.current;
+        const pool = workLinesRef.current;
+        const line = pool.length > 0 ? pool[turn % pool.length] : null;
+        // 三轮里两轮给任务详情（有进度信息），一轮给档位台词（保持「在说话」的感觉）
+        if (current !== null && (turn % 3 !== 2 || line === null)) {
+          hub.bubbles.updateWorkText(current);
+          return;
+        }
+        hub.bubbles.updateWorkText(line ?? current);
+      }, 18000);
+    };
+
     /** 工作状态联动：按档位播动画并弹文本气泡；回空闲时收起气泡并改播完即停。 */
     const consumeWorkStatus = (): void => {
       const cfg = hub.cfg();
@@ -139,6 +182,7 @@ export function createCueEffects(rt: CueEffectsRuntime) {
         // 回空闲时把循环中的工作动画改成「播完即停」：否则 ended 永不触发，动画链拿不到
         // 推进信号，宠物会一直卡在工作动画上。
         if (poolIncludes(hub.anims().events?.workStatus ?? [], card.animRef.current)) hub.ownAnim.stopLoopingFront();
+        stopWorkChatter();
         hub.bubbles.resetWork();
         return;
       }
@@ -166,6 +210,10 @@ export function createCueEffects(rt: CueEffectsRuntime) {
           : undefined;
       // 文本总是更新，任务详情可能在同一状态下变化。
       hub.bubbles.updateWorkText(workStatus.task ?? configuredText ?? null);
+      // 干活期间持续播报进度：任务详情与档位台词轮换，桌面上一眼能看出还在做、做到哪一步。
+      const terminalState = workStatus.state === 'success' || workStatus.state === 'error';
+      if (terminalState || hub.sleeping()) stopWorkChatter();
+      else startWorkChatter(workStatus.task ?? null, textGroup);
       const terminal = workStatus.state === 'success' || workStatus.state === 'error';
       // 只在状态变化时点亮或收起气泡：同状态后续 tick 不重新点亮已自动收起的终态气泡。
       if (stateChanged) hub.bubbles.lightWork(terminal);
@@ -244,5 +292,9 @@ export function createCueEffects(rt: CueEffectsRuntime) {
       // 守卫函数每渲染重建，但只读 ref 与当拍的 props；进依赖会让每个渲染都重跑八个守卫。
       // eslint-disable-next-line react-hooks/exhaustive-deps -- 变化原因只有这八个计数器
     }, [balanceTick, balanceNoticeTick, envTick, workStatusTick, sayTick, animCueTick, posCueTick, throwCueTick]);
+
+    // 卸载时收掉进度播报定时器：宠物被移除 / 页面关闭后不该留着 interval 继续跑。
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- 只在挂载/卸载时跑
+    useEffect(() => () => stopWorkChatter(), []);
   };
 }

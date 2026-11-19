@@ -113,16 +113,20 @@ export function currentTaskFromTodo(event: {
   data?: { todos?: Array<{ status?: string; content?: string }> };
 }): string | null {
   const todos = Array.isArray(event?.data?.todos) ? event.data.todos : [];
-  let current: { status?: string; content?: string } | undefined;
-  for (const t of todos) {
-    if (t?.status === 'in_progress') current = t;
+  let currentAt = -1;
+  for (let i = 0; i < todos.length; i += 1) {
+    if (todos[i]?.status === 'in_progress') currentAt = i;
   }
-  if (!current) current = todos.find((t) => t?.status === 'pending');
-  const content = String(current?.content ?? '').trim();
+  if (currentAt < 0) currentAt = todos.findIndex((t) => t?.status === 'pending');
+  const content = String(todos[currentAt]?.content ?? '').trim();
   if (!content) return null;
-  // 按码点切，避免把代理对（emoji 等）截成半个字符
+  // 步骤计数：清单里有多步时，气泡带上「第几步/共几步」，桌面上一眼看出进度到哪了。
+  const total = todos.length;
+  const prefix = total >= 2 ? `${currentAt + 1}/${total} ` : '';
+  const room = TASK_TEXT_MAX - Array.from(prefix).length;
   const points = Array.from(content);
-  return points.length > TASK_TEXT_MAX ? `${points.slice(0, TASK_TEXT_MAX).join('')}…` : content;
+  const shown = points.length > room ? `${points.slice(0, Math.max(1, room - 1)).join('')}…` : content;
+  return prefix + shown;
 }
 
 /** 工作状态快照（= /state 里 sections.workStatus 的 data）：state 为主状态；task 为 todo 详情（可 null）。 */

@@ -2,9 +2,21 @@
 
 > 返回 [README](README.md)
 
-装法取决于你在用哪个 DSH：**桌面应用**用应用内「插件管理」，**`dsh web`** 用命令行，改用源码安装则先 clone 再构建。几条路最终都是把插件装进 profile 的 `node_modules`，效果一样；区别只是入口。
+装法有三种，效果一样（都是把插件装进 profile 的 `node_modules`）：**对 DSH 说一句话**、**应用内插件市场**、**命令行**。
 
 装完**重开 DSH**（`dsh web` 用户则重启 `dsh web`）才生效——运行中的进程持有内存里的旧插件。宠物出现在界面右上角（默认配置角落，可在设置页修改）。
+
+## 方式零：对 DSH 说一句话（推荐）
+
+在 DSH 对话框里发：
+
+```
+帮我把小狗桌宠装上：git clone https://github.com/Agelei19/dsh-pet 后，跑 node dsh-pet/scripts/install-puppy.mjs --profile desktop
+```
+
+DSH 会自己 clone、把插件写进 profile 的 `package.json` 与 `bundles`、在 `node_modules` 建指向仓库的 junction，然后提醒你重启。`lib/` 已随仓库提供，不需要构建。
+
+`--profile` 按你在用的界面填：`dsh web` → `web`，桌面应用 → `desktop`。
 
 ## 前置要求
 
@@ -21,7 +33,13 @@ dsh --version   # 验证 dsh 命令可用
 
 ## 方式一：应用内「插件管理」（桌面应用）
 
-直接打开应用内「插件管理」页，在安装框里填 `dsh-pet`，不用开终端。需要在终端里操作插件时，用桌面应用自带的那份 CLI。
+打开「插件 → 插件市场 → 索引源 → 添加」，填入本仓库的索引地址：
+
+```
+https://raw.githubusercontent.com/Agelei19/dsh-pet/puppy/market/index.json
+```
+
+之后在插件市场里点 `puppy` 安装即可。索引格式见 [market/README.md](market/README.md)。
 
 ## 方式二：命令行（`dsh web` 与桌面应用）
 
@@ -44,25 +62,24 @@ dsh plugin --profile desktop add dsh-pet
 
 ## 方式三：从源码安装（clone 本仓库后）
 
-`lib/` 构建产物不入库，clone 后需要先构建再安装：
+`lib/` 已入库，clone 完直接装：
 
 ```sh
-# ① clone 本仓库，进入插件目录
-git clone https://github.com/PC2005-cloud/dsh-pet.git
-cd dsh-pet/dsh-pet
-
-# ② 安装依赖
-npm install
-
-# ③ 构建（完整 lib：tsdown → lib + 桌面共享核心 + 类型声明）
-npm run build       # 必须手动跑一次（克隆后 npm install 不再自动构建）
-
-# ④ 安装到 DSH（file: 指向**插件目录**——上面 cd 进去的那一层，用构建好的 lib）
-#    --profile 填实际在用的那个：dsh web → web；桌面应用 → desktop
-dsh plugin --profile web add file:D:/path/to/dsh-pet/dsh-pet
+git clone https://github.com/Agelei19/dsh-pet.git
+cd dsh-pet
+node scripts/install-puppy.mjs --profile desktop   # dsh web 用 --profile web
 ```
 
-> 注：`npm run build`（即 `scripts/prepare.js`）才产出**完整可安装**的 lib——除 tsdown 构建外还构建桌面共享核心（`shared-core.js`）、生成类型声明并收敛发布 `files` 清单；裸 `tsdown` 构建会缺桌面运行时与类型。发布与打包（`npm publish` / `npm pack`）时由 `prepack` 自动调用它，克隆仓库后需手动跑一次。
+脚本做了三件事：备份并改写 profile 的 `package.json`（`dependencies.puppy = file:<仓库里的 dsh-pet>`、`dsh.profile.bundles` 补 `puppy`）、在 `node_modules` 建 junction 指向仓库，因此**改了 `src/` 重新 `npm run build` 就即时生效**，不用重装。
+
+要自己控制每一步，等价的手动流程：
+
+```sh
+cd dsh-pet/dsh-pet
+npm install          # 只有改代码时才需要
+npm run build        # 产物在 lib/，仓库里已带一份
+dsh plugin --profile desktop add file:D:/path/to/dsh-pet/dsh-pet
+```
 
 ## 独立模式（无需 DSH）
 
